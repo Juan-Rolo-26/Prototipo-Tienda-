@@ -1,0 +1,177 @@
+const express = require("express");
+const path = require("path");
+const multer = require("multer");
+const { PrismaClient } = require("@prisma/client");
+const { requireAdmin } = require("../middleware/auth");
+const { parsePriceToCents, formatCentsToNumber } = require("../utils/pricing");
+
+const prisma = new PrismaClient();
+const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.join(__dirname, "..", "..", "uploads"));
+  },
+  filename: (req, file, cb) => {
+    const safeName = file.originalname.replace(/\s+/g, "-").toLowerCase();
+    cb(null, `${Date.now()}-${safeName}`);
+  },
+});
+
+const upload = multer({ storage });
+
+function normalizeProduct(product) {
+  const media = (product.media || [])
+    .sort((a, b) => a.position - b.position)
+    .map((item) => ({ url: item.url, type: item.type, position: item.position }));
+  const cover = media.find((item) => item.type === "image");
+  return {
+    ...product,
+    price: formatCentsToNumber(product.price),
+    media,
+    image: cover?.url || product.image,
+  };
+}
+
+function inferType(file) {
+  return file.mimetype.startsWith("video/") ? "video" : "image";
+}
+
+function ensureCoverIsImage(mediaItems) {
+  if (mediaItems.length === 0) return;
+  if (mediaItems[0].type !== "image") {
+    throw new Error("Cover must be an image");
+  }
+}
+
+router.get("/", async (req, res) => {
+  const products = await prisma.product.findMany({
+    where: { stock: { gt: 0 } },
+    orderBy: { createdAt: "desc" },
+    include: { media: true },
+  });
+
+  res.json(products.map(normalizeProduct));
+});
+
+router.get("/:id", async (req, res) => {
+  const { id } = req.params;
+  const product = await prisma.product.findUnique({ where: { id }, include: { media: true } });
+  if (!product) return res.status(404).json({ error: "Not found" });
+  res.json(normalizeProduct(product));
+});
+
+router.post("/", requireAdmin, upload.array("media", 10), async (req, res) => {
+  try {
+    const { name, price, width, height, weight, stock, description } = req.body;
+    const files = req.files || [];
+    if (!name || !price || !width || !height || !weight || files.length === 0) {
+      return res.status(400).json({ error: "Missing required fields" });
+    }
+
+    const mediaItems = files.map((file, index) => ({
+      url: `/uploads/${file.filename}`,
+      type: inferType(file),
+      position: index,
+    }));
+
+    ensureCoverIsImage(mediaItems);
+
+    const cover = mediaItems.find((item) => item.type === "image");
+
+    const product = await prisma.product.create({
+      data: {
+        name,
+        price: parsePriceToCents(price),
+        width: Number(width),
+        height: Number(height),
+        weight: Number(weight),
+        stock: stock ? Number(stock) : 1,
+        description: description || null,
+        image: cover?.url || "/uploads/placeholder.png",
+        media: {
+          create: mediaItems.map((item) => ({
+            url: item.url,
+            type: item.type,
+            position: item.position,
+          })),
+        },
+      },
+      include: { media: true },
+    });
+
+    res.status(201).json(normalizeProduct(product));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.put("/:id", requireAdmin, upload.array("media", 10), async (req, res) => {
+  const { id } = req.params;
+  try {
+    const payload = {};
+    const { name, price, width, height, weight, stock, description, existingMedia } = req.body;
+
+    if (name) payload.name = name;
+    if (price) payload.price = parsePriceToCents(price);
+    if (width) payload.width = Number(width);
+    if (height) payload.height = Number(height);
+    if (weight) payload.weight = Number(weight);
+    if (stock !== undefined) payload.stock = Number(stock);
+    if (description !== undefined) payload.description = description || null;
+
+    const providedExisting = existingMedia ? JSON.parse(existingMedia) : [];
+    const newFiles = req.files || [];
+    const newItems = newFiles.map((file) => ({
+      url: `/uploads/${file.filename}`,
+      type: inferType(file),
+    }));
+
+    const combined = [...providedExisting, ...newItems].map((item, index) => ({
+      url: item.url,
+      type: item.type,
+      position: index,
+    }));
+
+    if (combined.length > 0) {
+      ensureCoverIsImage(combined);
+      const cover = combined.find((item) => item.type === "image");
+      payload.image = cover?.url || payload.image;
+      payload.media = {
+        deleteMany: {},
+        create: combined.map((item) => ({
+          url: item.url,
+          type: item.type,
+          position: item.position,
+        })),
+      };
+    }
+
+    const updated = await prisma.product.update({
+      where: { id },
+      data: payload,
+      include: { media: true },
+    });
+
+    if (updated.stock <= 0) {
+      await prisma.product.delete({ where: { id } });
+      return res.json({ deleted: true });
+    }
+
+    res.json(normalizeProduct(updated));
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+router.delete("/:id", requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await prisma.product.delete({ where: { id } });
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+module.exports = router;
