@@ -17,20 +17,22 @@ model Admin {
 }
 
 model Customer {
-  id         String   @id @default(cuid())
-  email      String   @unique
-  firstName  String?
-  lastName   String?
-  province   String?
-  city       String?
-  address1   String?
-  address2   String?
-  postalCode String?
-  phone      String?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id                   String               @id @default(cuid())
+  email                String               @unique
+  firstName            String?
+  lastName             String?
+  province             String?
+  city                 String?
+  address1             String?
+  address2             String?
+  postalCode           String?
+  phone                String?
+  mercadoPagoCustomerId String?             @unique
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
 
-  orders     Order[]
+  orders               Order[]
+  savedPaymentMethods  SavedPaymentMethod[]
 }
 
 model Product {
@@ -72,7 +74,11 @@ model Order {
   postalCode     String
   phone          String
   deliveryMethod String
-  status         String         @default("CONFIRMED")
+  totalAmount    Int            @default(0)
+  status         String         @default("pending")
+  paymentId      String?
+  paymentStatus  String?
+  statusDetail   String?
   createdAt      DateTime       @default(now())
 
   items          OrderItem[]
@@ -88,4 +94,21 @@ model OrderItem {
   productPrice Int
   productImage String
   quantity     Int     @default(1)
+}
+
+model SavedPaymentMethod {
+  id              String   @id @default(cuid())
+  customer        Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  customerId      String
+  mercadoPagoToken String?
+  brand           String
+  last4           String
+  expirationMonth Int?
+  expirationYear  Int?
+  cardholderName  String?
+  issuerId        String?
+  paymentMethodId String?
+  isDefault       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }

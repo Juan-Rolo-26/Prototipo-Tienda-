@@ -220,7 +220,7 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 50;
+  z-index: 2000;
   padding: 24px;
 }
 
@@ -626,6 +626,45 @@ button {
 .helper {
   color: var(--muted);
   font-size: 13px;
+}
+
+.checkout-form {
+  display: grid;
+  gap: 10px;
+}
+
+.checkbox-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.checkbox-inline input {
+  width: auto;
+}
+
+.mp-brick-container {
+  min-height: 340px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px;
+  background: #fff;
+}
+
+.saved-methods {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.saved-method-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
 }
 
 .badge {

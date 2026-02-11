@@ -6,7 +6,10 @@ const router = express.Router();
 const prisma = new PrismaClient();
 
 router.get("/me", requireCustomer, async (req, res) => {
-  const customer = await prisma.customer.findUnique({ where: { id: req.customer.id } });
+  const customer = await prisma.customer.findUnique({
+    where: { id: req.customer.id },
+    include: { savedPaymentMethods: { orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }] } },
+  });
   res.json({ customer });
 });
 
@@ -26,6 +29,16 @@ router.put("/me", requireCustomer, async (req, res) => {
     },
   });
   res.json({ customer });
+});
+
+router.delete("/payment-methods/:id", requireCustomer, async (req, res) => {
+  const { id } = req.params;
+  const method = await prisma.savedPaymentMethod.findUnique({ where: { id } });
+  if (!method || method.customerId !== req.customer.id) {
+    return res.status(404).json({ error: "Payment method not found" });
+  }
+  await prisma.savedPaymentMethod.delete({ where: { id } });
+  return res.json({ ok: true });
 });
 
 module.exports = router;

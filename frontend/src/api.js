@@ -59,6 +59,20 @@ export async function updateCustomerProfile(token, payload) {
   return res.json();
 }
 
+export async function deleteSavedPaymentMethod(token, paymentMethodId) {
+  const res = await fetch(`${API_URL}/api/customers/payment-methods/${paymentMethodId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "No se pudo eliminar el metodo guardado");
+  }
+  return res.json();
+}
+
 export async function fetchProducts() {
   const res = await fetch(`${API_URL}/api/products`);
   if (!res.ok) throw new Error("No se pudieron cargar productos");
@@ -109,17 +123,32 @@ export async function deleteProduct(productId, token) {
   return res.json();
 }
 
-export async function checkoutOrder(payload, token) {
+export async function initPayment(payload, token) {
   const headers = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(`${API_URL}/api/orders/checkout`, {
+  const res = await fetch(`${API_URL}/api/payments/init`, {
     method: "POST",
     headers,
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || "No se pudo confirmar el pedido");
+    throw new Error(data.error || "No se pudo inicializar el pago");
+  }
+  return res.json();
+}
+
+export async function processPayment(payload, token) {
+  const headers = { "Content-Type": "application/json" };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_URL}/api/payments/process`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "No se pudo procesar el pago");
   }
   return res.json();
 }

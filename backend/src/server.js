@@ -8,6 +8,8 @@ const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
 const orderRoutes = require("./routes/orders");
 const customerRoutes = require("./routes/customers");
+const paymentRoutes = require("./routes/payments");
+const webhookRoutes = require("./routes/webhooks");
 const { ensureAdmins } = require("./utils/ensureAdmins");
 
 const app = express();
@@ -25,6 +27,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/customers", customerRoutes);
+app.use("/api/payments", paymentRoutes);
+app.use("/api/webhooks", webhookRoutes);
 
 ensureAdmins()
   .then(() => {

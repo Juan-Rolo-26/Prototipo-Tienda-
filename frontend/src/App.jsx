@@ -215,7 +215,15 @@ function App() {
             </svg>
             <span className="nav-badge">{cartCount}</span>
           </NavLink>
-          <button className="nav-icon" type="button" aria-label="Usuario" onClick={() => setAuthOpen(true)}>
+          <button
+            className="nav-icon"
+            type="button"
+            aria-label="Usuario"
+            onClick={(event) => {
+              event.stopPropagation();
+              setAuthOpen(true);
+            }}
+          >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
               <path d="M4 20c1.6-3 4.3-4.5 8-4.5s6.4 1.5 8 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />

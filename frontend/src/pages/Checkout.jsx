@@ -1,8 +1,29 @@
-import React, { useEffect, useRef, useState } from "react";
-import { checkoutOrder, updateCustomerProfile } from "../api";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import {
+  deleteSavedPaymentMethod,
+  initPayment,
+  processPayment,
+  updateCustomerProfile,
+} from "../api";
 import { formatPrice } from "../utils/format";
 
+const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
+
+function hasStoredAddress(profile) {
+  if (!profile) return false;
+  return Boolean(
+    profile.firstName &&
+      profile.lastName &&
+      profile.province &&
+      profile.city &&
+      profile.address1 &&
+      profile.postalCode &&
+      profile.phone
+  );
+}
+
 function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpdate }) {
+  const [step, setStep] = useState("cart");
   const [form, setForm] = useState({
     customerName: "",
     province: "",
@@ -17,14 +38,31 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
   const [loading, setLoading] = useState(false);
   const [editingProfile, setEditingProfile] = useState(true);
   const [warnings, setWarnings] = useState({});
+  const [saveCustomerData, setSaveCustomerData] = useState(false);
+  const [savePaymentMethod, setSavePaymentMethod] = useState(false);
+  const [paymentSession, setPaymentSession] = useState(null);
+  const [savedMethods, setSavedMethods] = useState([]);
+  const [selectedMethodId, setSelectedMethodId] = useState(null);
+  const [paymentResult, setPaymentResult] = useState(null);
+  const [brickReady, setBrickReady] = useState(false);
   const warningTimers = useRef({});
+  const brickControllerRef = useRef(null);
+
+  const total = useMemo(
+    () => cart.reduce((sum, item) => sum + item.price * item.quantity, 0),
+    [cart]
+  );
 
   useEffect(() => {
     if (!customerProfile) {
       setEditingProfile(true);
       return;
     }
-    const fullName = [customerProfile.firstName, customerProfile.lastName].filter(Boolean).join(" ");
+
+    const fullName = [customerProfile.firstName, customerProfile.lastName]
+      .filter(Boolean)
+      .join(" ");
+
     setForm((prev) => ({
       ...prev,
       customerName: fullName || prev.customerName,
@@ -35,10 +73,137 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
       postalCode: customerProfile.postalCode || prev.postalCode,
       phone: customerProfile.phone || prev.phone,
     }));
-    setEditingProfile(false);
+
+    setEditingProfile(!hasStoredAddress(customerProfile));
+    setSavedMethods(customerProfile.savedPaymentMethods || []);
+    setSelectedMethodId(customerProfile.savedPaymentMethods?.[0]?.id || null);
   }, [customerProfile]);
 
-  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  useEffect(() => {
+    if (!customerToken) {
+      setSaveCustomerData(false);
+      setSavePaymentMethod(false);
+      setSavedMethods([]);
+      setSelectedMethodId(null);
+    }
+  }, [customerToken]);
+
+  useEffect(() => {
+    if (step !== "payment" || !paymentSession) return undefined;
+    if (!MP_PUBLIC_KEY) {
+      setStatus("Falta VITE_MERCADOPAGO_PUBLIC_KEY en frontend/.env");
+      return undefined;
+    }
+
+    let cancelled = false;
+
+    const mountBrick = async () => {
+      try {
+        setBrickReady(false);
+        if (!window.MercadoPago) {
+          await new Promise((resolve, reject) => {
+            const existing = document.querySelector('script[data-mp-sdk="true"]');
+            if (existing) {
+              existing.addEventListener("load", resolve, { once: true });
+              existing.addEventListener("error", reject, { once: true });
+              return;
+            }
+            const script = document.createElement("script");
+            script.src = "https://sdk.mercadopago.com/js/v2";
+            script.dataset.mpSdk = "true";
+            script.onload = resolve;
+            script.onerror = reject;
+            document.body.appendChild(script);
+          });
+        }
+
+        if (cancelled) return;
+
+        const mp = new window.MercadoPago(MP_PUBLIC_KEY, { locale: "es-AR" });
+        const bricksBuilder = mp.bricks();
+
+        if (brickControllerRef.current?.unmount) {
+          await brickControllerRef.current.unmount();
+        }
+
+        brickControllerRef.current = await bricksBuilder.create(
+          "cardPayment",
+          "mp-card-payment-brick",
+          {
+            initialization: {
+              amount: paymentSession.amount,
+              payer: {
+                email: customerProfile?.email || undefined,
+              },
+            },
+            callbacks: {
+              onReady: () => {
+                if (!cancelled) setBrickReady(true);
+              },
+              onSubmit: async (cardFormData) => {
+                setLoading(true);
+                setStatus(null);
+                setPaymentResult(null);
+                try {
+                  const result = await processPayment(
+                    {
+                      ...cardFormData,
+                      orderId: paymentSession.orderId,
+                      transaction_amount: paymentSession.amount,
+                      payer: {
+                        email:
+                          cardFormData?.payer?.email ||
+                          customerProfile?.email ||
+                          undefined,
+                      },
+                      savePaymentMethod: Boolean(customerToken && savePaymentMethod),
+                      selectedSavedMethodId: selectedMethodId,
+                    },
+                    customerToken
+                  );
+
+                  setPaymentResult(result);
+
+                  if (result.paymentStatus === "approved") {
+                    onClear?.();
+                    setStatus("Pago aprobado. Pedido confirmado.");
+                  } else if (result.paymentStatus === "pending") {
+                    setStatus("Pago pendiente. Te avisaremos cuando se confirme.");
+                  } else {
+                    setStatus("Pago rechazado. Puedes intentar con otra tarjeta.");
+                  }
+                } catch (error) {
+                  setStatus(error.message);
+                  throw error;
+                } finally {
+                  setLoading(false);
+                }
+              },
+              onError: (error) => {
+                setStatus(error?.message || "Error al cargar Mercado Pago Brick");
+              },
+            },
+          }
+        );
+      } catch (error) {
+        setStatus("No se pudo cargar Mercado Pago Brick");
+      }
+    };
+
+    mountBrick();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    step,
+    paymentSession,
+    customerProfile?.email,
+    customerToken,
+    savePaymentMethod,
+    selectedMethodId,
+    onClear,
+  ]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -53,54 +218,15 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
     }, 2000);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    if (cart.length === 0) {
-      setStatus("El carrito esta vacio.");
-      return;
-    }
-    setLoading(true);
-    setStatus(null);
-    try {
-      if (customerToken && editingProfile) {
-        const [firstName, ...rest] = String(form.customerName || "").trim().split(" ");
-        const lastName = rest.join(" ");
-        const updated = await updateCustomerProfile(customerToken, {
-          firstName: firstName || "",
-          lastName: lastName || "",
-          province: form.province,
-          city: form.city,
-          address1: form.address1,
-          address2: form.address2,
-          postalCode: form.postalCode,
-          phone: form.phone,
-        });
-        onCustomerUpdate?.(updated.customer);
-      }
-
-      await checkoutOrder(
-        {
-          ...form,
-          items: cart.map((item) => ({ productId: item.productId, quantity: item.quantity })),
-        },
-        customerToken
-      );
-      onClear();
-      setStatus("Pedido confirmado. Te contactaremos para coordinar.");
-    } catch (error) {
-      setStatus(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSaveProfile = async () => {
     if (!customerToken) return;
+
     setLoading(true);
     setStatus(null);
     try {
       const [firstName, ...rest] = String(form.customerName || "").trim().split(" ");
       const lastName = rest.join(" ");
+
       const updated = await updateCustomerProfile(customerToken, {
         firstName: firstName || "",
         lastName: lastName || "",
@@ -111,9 +237,10 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
         postalCode: form.postalCode,
         phone: form.phone,
       });
+
       onCustomerUpdate?.(updated.customer);
       setEditingProfile(false);
-      setStatus("Ubicacion actualizada.");
+      setStatus("Ubicacion guardada.");
     } catch (error) {
       setStatus(error.message);
     } finally {
@@ -121,131 +248,326 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
     }
   };
 
-  return (
-    <div className="grid" style={{ gridTemplateColumns: "1.2fr 1fr" }}>
-      <form className="form" onSubmit={handleSubmit}>
-        <h2>Checkout rapido</h2>
-        {customerToken && !editingProfile && (
-          <div className="profile-banner">
-            <span>Datos guardados en tu cuenta.</span>
-            <button className="button secondary" type="button" onClick={() => setEditingProfile(true)}>
-              Cambiar ubicacion actual
-            </button>
-          </div>
-        )}
-        <input
-          name="customerName"
-          placeholder="Nombre y apellido"
-          value={form.customerName}
-          onChange={handleChange}
-          required
-          disabled={customerToken && !editingProfile}
-        />
-        <input
-          name="province"
-          placeholder="Provincia"
-          value={form.province}
-          onChange={handleChange}
-          required
-          disabled={customerToken && !editingProfile}
-        />
-        <input
-          name="city"
-          placeholder="Ciudad"
-          value={form.city}
-          onChange={handleChange}
-          required
-          disabled={customerToken && !editingProfile}
-        />
-        <input
-          name="address1"
-          placeholder="Direccion (linea 1)"
-          value={form.address1}
-          onChange={handleChange}
-          required
-          disabled={customerToken && !editingProfile}
-        />
-        <input
-          name="address2"
-          placeholder="Direccion (linea 2)"
-          value={form.address2}
-          onChange={handleChange}
-          disabled={customerToken && !editingProfile}
-        />
-        <input
-          name="postalCode"
-          placeholder="Codigo postal"
-          value={form.postalCode}
-          onChange={handleChange}
-          required
-          disabled={customerToken && !editingProfile}
-        />
-        <input
-          name="phone"
-          placeholder="Telefono"
-          value={form.phone}
-          onChange={handleChange}
-          required
-          disabled={customerToken && !editingProfile}
-        />
-        <select name="deliveryMethod" value={form.deliveryMethod} onChange={handleChange}>
-          <option value="PICKUP">Retiro por local</option>
-          <option value="HOME_DELIVERY">Envio a domicilio</option>
-          <option value="BRANCH_DELIVERY">Envio a sucursal Correo Argentino</option>
-        </select>
-        {customerToken && editingProfile && (
-          <button className="button secondary" type="button" onClick={handleSaveProfile} disabled={loading}>
-            Guardar ubicacion
-          </button>
-        )}
-        <button className="button" type="submit" disabled={loading}>
-          {loading ? "Confirmando..." : "Confirmar pedido"}
-        </button>
-        {status && <p className="helper">{status}</p>}
-      </form>
+  const handleInitPayment = async (event) => {
+    event.preventDefault();
+    if (cart.length === 0) {
+      setStatus("El carrito esta vacio.");
+      return;
+    }
 
-      <div className="form">
-        <h2>Resumen</h2>
-        {cart.length === 0 && <p className="helper">No hay productos en el carrito.</p>}
-        <div className="table">
-          {cart.map((item) => (
-            <div className="cart-item" key={item.productId}>
-              <img src={item.image} alt={item.name} />
-              <div className="cart-item-info">
-                <strong>{item.name}</strong>
-                <span className="helper">Ancho: {item.width} · Alto: {item.height} · Peso: {item.weight}</span>
-                <div className="qty-control cart-qty">
-                  <button type="button" onClick={() => item.onQtyChange?.(item.productId, Math.max(1, item.quantity - 1))} disabled={item.quantity <= 1}>
-                    −
-                  </button>
-                  <span>{item.quantity}</span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (item.stock && item.quantity + 1 > item.stock) {
-                        showWarning(item.productId);
-                        return;
+    let shouldSaveData = false;
+    if (customerToken) {
+      shouldSaveData = saveCustomerData;
+      if (!hasStoredAddress(customerProfile) && !saveCustomerData) {
+        shouldSaveData = window.confirm(
+          "¿Quieres guardar estos datos para futuras compras?"
+        );
+      }
+    }
+
+    setLoading(true);
+    setStatus(null);
+    setPaymentResult(null);
+
+    try {
+      const session = await initPayment(
+        {
+          customerData: { ...form },
+          items: cart.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+          })),
+          totalAmount: total,
+          saveCustomerData: shouldSaveData,
+        },
+        customerToken
+      );
+
+      setPaymentSession(session);
+      setSavedMethods(session.savedPaymentMethods || []);
+      setSelectedMethodId(session.savedPaymentMethods?.[0]?.id || null);
+      setStep("payment");
+      setStatus("Pedido creado. Completa el pago con Mercado Pago.");
+    } catch (error) {
+      setStatus(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteSavedMethod = async (id) => {
+    if (!customerToken) return;
+    try {
+      await deleteSavedPaymentMethod(customerToken, id);
+      const nextMethods = savedMethods.filter((method) => method.id !== id);
+      setSavedMethods(nextMethods);
+      if (selectedMethodId === id) {
+        setSelectedMethodId(nextMethods[0]?.id || null);
+      }
+      setStatus("Metodo de pago guardado eliminado.");
+    } catch (error) {
+      setStatus(error.message);
+    }
+  };
+
+  return (
+    <div className="grid" style={{ gridTemplateColumns: step === "cart" ? "1fr" : "1.2fr 1fr" }}>
+      {(step === "cart" || step === "checkout") && (
+        <div className="form">
+          <h2>{step === "cart" ? "Carrito" : "Checkout"}</h2>
+          {cart.length === 0 && <p className="helper">No hay productos en el carrito.</p>}
+          <div className="table">
+            {cart.map((item) => (
+              <div className="cart-item" key={item.productId}>
+                <img src={item.image} alt={item.name} />
+                <div className="cart-item-info">
+                  <strong>{item.name}</strong>
+                  <span className="helper">
+                    Ancho: {item.width} · Alto: {item.height} · Peso: {item.weight}
+                  </span>
+                  <div className="qty-control cart-qty">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        item.onQtyChange?.(item.productId, Math.max(1, item.quantity - 1))
                       }
-                      item.onQtyChange?.(item.productId, item.quantity + 1);
-                    }}
-                  >
-                    +
-                  </button>
+                      disabled={item.quantity <= 1}
+                    >
+                      -
+                    </button>
+                    <span>{item.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (item.stock && item.quantity + 1 > item.stock) {
+                          showWarning(item.productId);
+                          return;
+                        }
+                        item.onQtyChange?.(item.productId, item.quantity + 1);
+                      }}
+                    >
+                      +
+                    </button>
+                  </div>
+                  {warnings[item.productId] && (
+                    <span className="helper">no hay esa cantidad en el stock</span>
+                  )}
                 </div>
-                {warnings[item.productId] && <span className="helper">no hay esa cantidad en el stock</span>}
+                <strong>{formatPrice(item.price * item.quantity)}</strong>
+                <button
+                  className="cart-remove"
+                  type="button"
+                  onClick={() => item.onRemove?.(item.productId)}
+                  aria-label="Eliminar"
+                >
+                  ×
+                </button>
               </div>
-              <strong>{formatPrice(item.price)}</strong>
-              <button className="cart-remove" type="button" onClick={() => item.onRemove?.(item.productId)} aria-label="Eliminar">
-                ×
-              </button>
+            ))}
+          </div>
+          <div className="table-row">
+            <span>Total</span>
+            <strong>{formatPrice(total)}</strong>
+          </div>
+
+          {step === "cart" ? (
+            <button
+              className="button"
+              type="button"
+              disabled={cart.length === 0}
+              onClick={() => setStep("checkout")}
+            >
+              Finalizar compra
+            </button>
+          ) : (
+            <>
+              <form className="checkout-form" onSubmit={handleInitPayment}>
+                {customerToken && !editingProfile && (
+                  <div className="profile-banner">
+                    <span>Datos guardados en tu cuenta.</span>
+                    <button
+                      className="button secondary"
+                      type="button"
+                      onClick={() => setEditingProfile(true)}
+                    >
+                      Cambiar ubicacion actual
+                    </button>
+                  </div>
+                )}
+
+                <input
+                  name="customerName"
+                  placeholder="Nombre y apellido"
+                  value={form.customerName}
+                  onChange={handleChange}
+                  required
+                  disabled={customerToken && !editingProfile}
+                />
+                <input
+                  name="province"
+                  placeholder="Provincia"
+                  value={form.province}
+                  onChange={handleChange}
+                  required
+                  disabled={customerToken && !editingProfile}
+                />
+                <input
+                  name="city"
+                  placeholder="Ciudad"
+                  value={form.city}
+                  onChange={handleChange}
+                  required
+                  disabled={customerToken && !editingProfile}
+                />
+                <input
+                  name="address1"
+                  placeholder="Direccion (linea 1)"
+                  value={form.address1}
+                  onChange={handleChange}
+                  required
+                  disabled={customerToken && !editingProfile}
+                />
+                <input
+                  name="address2"
+                  placeholder="Direccion (linea 2)"
+                  value={form.address2}
+                  onChange={handleChange}
+                  disabled={customerToken && !editingProfile}
+                />
+                <input
+                  name="postalCode"
+                  placeholder="Codigo postal"
+                  value={form.postalCode}
+                  onChange={handleChange}
+                  required
+                  disabled={customerToken && !editingProfile}
+                />
+                <input
+                  name="phone"
+                  placeholder="Telefono"
+                  value={form.phone}
+                  onChange={handleChange}
+                  required
+                  disabled={customerToken && !editingProfile}
+                />
+                <select
+                  name="deliveryMethod"
+                  value={form.deliveryMethod}
+                  onChange={handleChange}
+                >
+                  <option value="PICKUP">Retiro por local</option>
+                  <option value="HOME_DELIVERY">Envio a domicilio</option>
+                  <option value="BRANCH_DELIVERY">Envio a sucursal Correo Argentino</option>
+                </select>
+
+                {customerToken && editingProfile && (
+                  <button
+                    className="button secondary"
+                    type="button"
+                    onClick={handleSaveProfile}
+                    disabled={loading}
+                  >
+                    Guardar ubicacion
+                  </button>
+                )}
+
+                {customerToken && (
+                  <label className="helper checkbox-inline">
+                    <input
+                      type="checkbox"
+                      checked={saveCustomerData}
+                      onChange={(event) => setSaveCustomerData(event.target.checked)}
+                    />
+                    Guardar estos datos para futuras compras
+                  </label>
+                )}
+
+                {!customerToken && (
+                  <p className="helper">Estas comprando como invitado. No se guardaran tus datos.</p>
+                )}
+
+                <button className="button" type="submit" disabled={loading}>
+                  {loading ? "Preparando pago..." : "Continuar al pago"}
+                </button>
+              </form>
+            </>
+          )}
+
+          {status && <p className="helper">{status}</p>}
+        </div>
+      )}
+
+      {step === "payment" && (
+        <>
+          <div className="form">
+            <h2>Pago seguro</h2>
+            <p className="helper">
+              Mercado Pago procesa la tarjeta de forma tokenizada. La tienda no almacena numero, CVV ni vencimiento.
+            </p>
+
+            {savedMethods.length > 0 && (
+              <div className="saved-methods">
+                <h3>Metodo guardado</h3>
+                {savedMethods.map((method) => (
+                  <label key={method.id} className="saved-method-row">
+                    <input
+                      type="radio"
+                      name="saved-method"
+                      checked={selectedMethodId === method.id}
+                      onChange={() => setSelectedMethodId(method.id)}
+                    />
+                    <span>
+                      {String(method.brand || "Tarjeta").toUpperCase()} terminada en {method.last4}
+                    </span>
+                    <button
+                      type="button"
+                      className="button secondary"
+                      onClick={() => handleDeleteSavedMethod(method.id)}
+                    >
+                      Eliminar
+                    </button>
+                  </label>
+                ))}
+                <p className="helper">Puedes cambiar o eliminar metodos guardados.</p>
+              </div>
+            )}
+
+            {customerToken && (
+              <label className="helper checkbox-inline">
+                <input
+                  type="checkbox"
+                  checked={savePaymentMethod}
+                  onChange={(event) => setSavePaymentMethod(event.target.checked)}
+                />
+                Guardar este metodo de pago para futuras compras
+              </label>
+            )}
+
+            <div id="mp-card-payment-brick" className="mp-brick-container" />
+            {!brickReady && <p className="helper">Cargando formulario de tarjeta...</p>}
+
+            {paymentResult && (
+              <p className="helper">
+                Estado del pago: <strong>{paymentResult.paymentStatus}</strong>
+              </p>
+            )}
+
+            <button className="button secondary" type="button" onClick={() => setStep("checkout")}>
+              Volver al checkout
+            </button>
+            {status && <p className="helper">{status}</p>}
+          </div>
+
+          <div className="form">
+            <h2>Resumen</h2>
+            <div className="table-row">
+              <span>Total a pagar</span>
+              <strong>{formatPrice(total)}</strong>
             </div>
-          ))}
-        </div>
-        <div className="table-row">
-          <span>Total</span>
-          <strong>{formatPrice(total)}</strong>
-        </div>
-      </div>
+            <p className="helper">Pedido: {paymentSession?.orderId || "-"}</p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
