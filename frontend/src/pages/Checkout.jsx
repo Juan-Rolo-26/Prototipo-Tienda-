@@ -3,9 +3,9 @@ import {
   deleteSavedPaymentMethod,
   initPayment,
   processPayment,
-  updateCustomerProfile,
 } from "../api";
 import { formatPrice } from "../utils/format";
+import { fetchArgCitiesByProvince, fetchArgProvinces } from "../services/argGeo";
 
 const MP_PUBLIC_KEY = import.meta.env.VITE_MERCADOPAGO_PUBLIC_KEY;
 
@@ -22,7 +22,19 @@ function hasStoredAddress(profile) {
   );
 }
 
-function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpdate }) {
+function buildAddressText(profile) {
+  if (!profile) return "";
+  return [profile.address1, profile.city, profile.province, profile.postalCode]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+function isValidArgentinaPhone(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  return digits.length >= 10 && digits.length <= 13;
+}
+
+function Checkout({ cart, onClear, customerToken, customerProfile }) {
   const [step, setStep] = useState("cart");
   const [form, setForm] = useState({
     customerName: "",
@@ -36,15 +48,18 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
   });
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [editingProfile, setEditingProfile] = useState(true);
-  const [warnings, setWarnings] = useState({});
-  const [saveCustomerData, setSaveCustomerData] = useState(false);
+  const [editingShipping, setEditingShipping] = useState(true);
+  const [setAsNewLocation, setSetAsNewLocation] = useState(false);
   const [savePaymentMethod, setSavePaymentMethod] = useState(false);
+  const [warnings, setWarnings] = useState({});
   const [paymentSession, setPaymentSession] = useState(null);
   const [savedMethods, setSavedMethods] = useState([]);
   const [selectedMethodId, setSelectedMethodId] = useState(null);
   const [paymentResult, setPaymentResult] = useState(null);
   const [brickReady, setBrickReady] = useState(false);
+  const [provinces, setProvinces] = useState([]);
+  const [cities, setCities] = useState([]);
+
   const warningTimers = useRef({});
   const brickControllerRef = useRef(null);
 
@@ -53,9 +68,11 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
     [cart]
   );
 
+  const hasSavedLocation = Boolean(customerToken && hasStoredAddress(customerProfile));
+
   useEffect(() => {
     if (!customerProfile) {
-      setEditingProfile(true);
+      setEditingShipping(true);
       return;
     }
 
@@ -74,19 +91,46 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
       phone: customerProfile.phone || prev.phone,
     }));
 
-    setEditingProfile(!hasStoredAddress(customerProfile));
+    setEditingShipping(!hasStoredAddress(customerProfile));
     setSavedMethods(customerProfile.savedPaymentMethods || []);
     setSelectedMethodId(customerProfile.savedPaymentMethods?.[0]?.id || null);
   }, [customerProfile]);
 
   useEffect(() => {
     if (!customerToken) {
-      setSaveCustomerData(false);
-      setSavePaymentMethod(false);
       setSavedMethods([]);
       setSelectedMethodId(null);
+      setSavePaymentMethod(false);
+      setEditingShipping(true);
+      setSetAsNewLocation(false);
     }
   }, [customerToken]);
+
+  useEffect(() => {
+    let active = true;
+    fetchArgProvinces().then((items) => {
+      if (active) setProvinces(items);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (!form.province) {
+      setCities([]);
+      return () => {
+        active = false;
+      };
+    }
+    fetchArgCitiesByProvince(form.province).then((items) => {
+      if (active) setCities(items);
+    });
+    return () => {
+      active = false;
+    };
+  }, [form.province]);
 
   useEffect(() => {
     if (step !== "payment" || !paymentSession) return undefined;
@@ -207,7 +251,12 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => {
+      if (name === "province") {
+        return { ...prev, province: value, city: "" };
+      }
+      return { ...prev, [name]: value };
+    });
   };
 
   const showWarning = (productId) => {
@@ -218,52 +267,38 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
     }, 2000);
   };
 
-  const handleSaveProfile = async () => {
-    if (!customerToken) return;
-
-    setLoading(true);
-    setStatus(null);
-    try {
-      const [firstName, ...rest] = String(form.customerName || "").trim().split(" ");
-      const lastName = rest.join(" ");
-
-      const updated = await updateCustomerProfile(customerToken, {
-        firstName: firstName || "",
-        lastName: lastName || "",
-        province: form.province,
-        city: form.city,
-        address1: form.address1,
-        address2: form.address2,
-        postalCode: form.postalCode,
-        phone: form.phone,
-      });
-
-      onCustomerUpdate?.(updated.customer);
-      setEditingProfile(false);
-      setStatus("Ubicacion guardada.");
-    } catch (error) {
-      setStatus(error.message);
-    } finally {
-      setLoading(false);
+  const getCheckoutCustomerData = () => {
+    if (hasSavedLocation && !editingShipping) {
+      return {
+        customerName: [customerProfile.firstName, customerProfile.lastName]
+          .filter(Boolean)
+          .join(" "),
+        province: customerProfile.province,
+        city: customerProfile.city,
+        address1: customerProfile.address1,
+        address2: customerProfile.address2 || "",
+        postalCode: customerProfile.postalCode,
+        phone: customerProfile.phone,
+        deliveryMethod: form.deliveryMethod,
+      };
     }
+
+    return { ...form };
   };
 
   const handleInitPayment = async (event) => {
     event.preventDefault();
     if (cart.length === 0) {
-      setStatus("El carrito esta vacio.");
+      setStatus("El lote esta vacio.");
       return;
     }
 
-    let shouldSaveData = false;
-    if (customerToken) {
-      shouldSaveData = saveCustomerData;
-      if (!hasStoredAddress(customerProfile) && !saveCustomerData) {
-        shouldSaveData = window.confirm(
-          "¿Quieres guardar estos datos para futuras compras?"
-        );
-      }
+    const customerData = getCheckoutCustomerData();
+    if (!isValidArgentinaPhone(customerData.phone)) {
+      setStatus("Ingresa un telefono valido de Argentina (10 a 13 digitos).");
+      return;
     }
+    const saveCustomerData = Boolean(customerToken && editingShipping && setAsNewLocation);
 
     setLoading(true);
     setStatus(null);
@@ -272,13 +307,13 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
     try {
       const session = await initPayment(
         {
-          customerData: { ...form },
+          customerData,
           items: cart.map((item) => ({
             productId: item.productId,
             quantity: item.quantity,
           })),
           totalAmount: total,
-          saveCustomerData: shouldSaveData,
+          saveCustomerData,
         },
         customerToken
       );
@@ -314,8 +349,8 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
     <div className="grid" style={{ gridTemplateColumns: step === "cart" ? "1fr" : "1.2fr 1fr" }}>
       {(step === "cart" || step === "checkout") && (
         <div className="form">
-          <h2>{step === "cart" ? "Carrito" : "Checkout"}</h2>
-          {cart.length === 0 && <p className="helper">No hay productos en el carrito.</p>}
+          <h2>{step === "cart" ? "Lote" : "Checkout"}</h2>
+          {cart.length === 0 && <p className="helper">No hay productos en el lote.</p>}
           <div className="table">
             {cart.map((item) => (
               <div className="cart-item" key={item.productId}>
@@ -380,117 +415,113 @@ function Checkout({ cart, onClear, customerToken, customerProfile, onCustomerUpd
               Finalizar compra
             </button>
           ) : (
-            <>
-              <form className="checkout-form" onSubmit={handleInitPayment}>
-                {customerToken && !editingProfile && (
-                  <div className="profile-banner">
-                    <span>Datos guardados en tu cuenta.</span>
-                    <button
-                      className="button secondary"
-                      type="button"
-                      onClick={() => setEditingProfile(true)}
-                    >
-                      Cambiar ubicacion actual
-                    </button>
-                  </div>
-                )}
-
-                <input
-                  name="customerName"
-                  placeholder="Nombre y apellido"
-                  value={form.customerName}
-                  onChange={handleChange}
-                  required
-                  disabled={customerToken && !editingProfile}
-                />
-                <input
-                  name="province"
-                  placeholder="Provincia"
-                  value={form.province}
-                  onChange={handleChange}
-                  required
-                  disabled={customerToken && !editingProfile}
-                />
-                <input
-                  name="city"
-                  placeholder="Ciudad"
-                  value={form.city}
-                  onChange={handleChange}
-                  required
-                  disabled={customerToken && !editingProfile}
-                />
-                <input
-                  name="address1"
-                  placeholder="Direccion (linea 1)"
-                  value={form.address1}
-                  onChange={handleChange}
-                  required
-                  disabled={customerToken && !editingProfile}
-                />
-                <input
-                  name="address2"
-                  placeholder="Direccion (linea 2)"
-                  value={form.address2}
-                  onChange={handleChange}
-                  disabled={customerToken && !editingProfile}
-                />
-                <input
-                  name="postalCode"
-                  placeholder="Codigo postal"
-                  value={form.postalCode}
-                  onChange={handleChange}
-                  required
-                  disabled={customerToken && !editingProfile}
-                />
-                <input
-                  name="phone"
-                  placeholder="Telefono"
-                  value={form.phone}
-                  onChange={handleChange}
-                  required
-                  disabled={customerToken && !editingProfile}
-                />
-                <select
-                  name="deliveryMethod"
-                  value={form.deliveryMethod}
-                  onChange={handleChange}
-                >
-                  <option value="PICKUP">Retiro por local</option>
-                  <option value="HOME_DELIVERY">Envio a domicilio</option>
-                  <option value="BRANCH_DELIVERY">Envio a sucursal Correo Argentino</option>
-                </select>
-
-                {customerToken && editingProfile && (
+            <form className="checkout-form" onSubmit={handleInitPayment}>
+              {hasSavedLocation && !editingShipping ? (
+                <div className="profile-banner checkout-location-preview">
+                  <span>Ubicacion actual: {buildAddressText(customerProfile)}</span>
                   <button
                     className="button secondary"
                     type="button"
-                    onClick={handleSaveProfile}
-                    disabled={loading}
+                    onClick={() => {
+                      setEditingShipping(true);
+                      setSetAsNewLocation(false);
+                    }}
                   >
-                    Guardar ubicacion
+                    Cambiar ubicacion
                   </button>
-                )}
+                </div>
+              ) : (
+                <>
+                  <input
+                    name="customerName"
+                    placeholder="Nombre y apellido"
+                    value={form.customerName}
+                    onChange={handleChange}
+                    required
+                  />
+                  <select name="province" value={form.province} onChange={handleChange} required>
+                    <option value="">Selecciona una provincia</option>
+                    {provinces.map((province) => (
+                      <option key={province} value={province}>
+                        {province}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    name="city"
+                    value={form.city}
+                    onChange={handleChange}
+                    required
+                    disabled={!form.province}
+                    onFocus={() => {
+                      if (!form.province) setStatus("Primero tienes que seleccionar una provincia.");
+                    }}
+                  >
+                    <option value="">
+                      {form.province ? "Selecciona una ciudad" : "Primero selecciona una provincia"}
+                    </option>
+                    {cities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    name="address1"
+                    placeholder="Direccion (linea 1) · Ej: Barrio - country"
+                    value={form.address1}
+                    onChange={handleChange}
+                    required
+                  />
+                  <input
+                    name="address2"
+                    placeholder="Direccion (linea 2) · Ej: Piso - mzna - lote"
+                    value={form.address2}
+                    onChange={handleChange}
+                  />
+                  <input
+                    name="postalCode"
+                    placeholder="Codigo postal"
+                    value={form.postalCode}
+                    onChange={handleChange}
+                    required
+                  />
+                  <input
+                    name="phone"
+                    placeholder="Telefono"
+                    value={form.phone}
+                    onChange={handleChange}
+                    inputMode="numeric"
+                    required
+                  />
+                  {customerToken && (
+                    <button
+                      className={`button secondary ${setAsNewLocation ? "active" : ""}`}
+                      type="button"
+                      onClick={() => setSetAsNewLocation((prev) => !prev)}
+                    >
+                      {setAsNewLocation
+                        ? "Nueva ubicacion establecida para futuras compras"
+                        : "Establecer como nueva ubicacion"}
+                    </button>
+                  )}
+                </>
+              )}
 
-                {customerToken && (
-                  <label className="helper checkbox-inline">
-                    <input
-                      type="checkbox"
-                      checked={saveCustomerData}
-                      onChange={(event) => setSaveCustomerData(event.target.checked)}
-                    />
-                    Guardar estos datos para futuras compras
-                  </label>
-                )}
+              <select
+                name="deliveryMethod"
+                value={form.deliveryMethod}
+                onChange={handleChange}
+              >
+                <option value="PICKUP">Retiro por local</option>
+                <option value="HOME_DELIVERY">Envio a domicilio</option>
+                <option value="BRANCH_DELIVERY">Envio a sucursal Correo Argentino</option>
+              </select>
 
-                {!customerToken && (
-                  <p className="helper">Estas comprando como invitado. No se guardaran tus datos.</p>
-                )}
-
-                <button className="button" type="submit" disabled={loading}>
-                  {loading ? "Preparando pago..." : "Continuar al pago"}
-                </button>
-              </form>
-            </>
+              <button className="button" type="submit" disabled={loading}>
+                {loading ? "Preparando pago..." : "Continuar al pago"}
+              </button>
+            </form>
           )}
 
           {status && <p className="helper">{status}</p>}

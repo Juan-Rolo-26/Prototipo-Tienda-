@@ -20,6 +20,11 @@ function splitName(fullName) {
   };
 }
 
+function isValidArgentinaPhone(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  return digits.length >= 10 && digits.length <= 13;
+}
+
 async function createPendingOrder({ customer, customerData, items, saveCustomerData }) {
   const {
     customerName,
@@ -34,6 +39,9 @@ async function createPendingOrder({ customer, customerData, items, saveCustomerD
 
   if (!customerName || !province || !city || !address1 || !postalCode || !phone || !deliveryMethod) {
     throw new Error("Missing customer data");
+  }
+  if (!isValidArgentinaPhone(phone)) {
+    throw new Error("Invalid phone");
   }
 
   if (!Array.isArray(items) || items.length === 0) {

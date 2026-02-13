@@ -81,7 +81,7 @@ function ProductCard({ product, onAdd, inCart, onDelete, showDelete }) {
       {warning && <div className="helper">{warning}</div>}
 
       <button className="button" onClick={handleAdd}>
-        {inCart ? "Actualizar carrito" : "Agregar al carrito"}
+        {inCart ? "Actualizar lote" : "Agregar al lote"}
       </button>
     </article>
   );

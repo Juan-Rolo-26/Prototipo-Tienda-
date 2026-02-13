@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=DM+Serif+Display&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&display=swap');
 
@@ -284,6 +285,11 @@ button {
   background: var(--bg-accent);
   border-radius: 12px;
   font-size: 13px;
+}
+
+.checkout-location-preview {
+  align-items: flex-start;
+  flex-direction: column;
 }
 
 .image-box {
@@ -601,6 +607,12 @@ button {
   border: 1px solid var(--border);
 }
 
+.button.secondary.active {
+  background: var(--bg-accent);
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
 .form {
   display: grid;
   gap: 12px;
@@ -747,5 +759,550 @@ button {
 
   .hero {
     padding: 18px;
+  }
+}
+
+/* Nuevo header estilo marketplace */
+.ml-header {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding: 12px 24px 10px;
+  background: #fff4a8;
+  border-bottom: 1px solid #e8d55e;
+  display: grid;
+  gap: 8px;
+  min-height: unset;
+}
+
+.ml-top {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.ml-brand-block {
+  display: grid;
+  gap: 8px;
+}
+
+.ml-logo-link {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ml-logo-img {
+  height: 110px;
+  width: auto;
+  mix-blend-mode: multiply;
+}
+
+.ml-location-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #3f3f3f;
+  width: fit-content;
+}
+
+.ml-pin-icon {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+}
+
+.ml-search-wrap {
+  display: grid;
+  grid-template-columns: 1fr 56px;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 10px;
+}
+
+.ml-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  outline: none;
+  font-size: 24px;
+  color: #333;
+}
+
+.ml-search-input::placeholder {
+  color: #9b9b9b;
+}
+
+.ml-search-button {
+  border: none;
+  background: #fff;
+  border-left: 1px solid #ececec;
+  cursor: pointer;
+  color: #666;
+}
+
+.ml-search-button svg {
+  width: 22px;
+  height: 22px;
+}
+
+.ml-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-left: 274px;
+}
+
+.ml-nav-row .nav-link {
+  text-transform: none;
+  letter-spacing: 0;
+  font-size: 19px;
+  color: #2f2f2f;
+}
+
+.ml-icon-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #2f2f2f;
+  padding: 0;
+  cursor: pointer;
+}
+
+.ml-icon-link svg {
+  width: 27px;
+  height: 27px;
+}
+
+.lot-icon .box-lid {
+  transform-origin: 12px 9px;
+  transition: transform 0.32s ease;
+}
+
+.lot-icon.open .box-lid {
+  transform: rotate(-45deg);
+}
+
+.lot-icon.pulse {
+  animation: lotPulse 0.95s ease;
+}
+
+@keyframes lotPulse {
+  0% { transform: scale(1); }
+  35% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.lot-fly {
+  position: fixed;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  pointer-events: none;
+  transform: translate(0, 0) scale(1);
+  transition: transform 0.95s cubic-bezier(0.18, 0.89, 0.32, 1.2), opacity 0.95s ease;
+}
+
+.location-form-page {
+  max-width: 620px;
+  margin: 26px auto;
+}
+
+.route-loader-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.22);
+  display: grid;
+  place-items: center;
+  z-index: 5000;
+}
+
+.route-loader {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 6px solid rgba(255, 255, 255, 0.6);
+  border-top-color: #ffffff;
+  animation: routeSpin 0.7s linear infinite;
+}
+
+@keyframes routeSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 920px) {
+  .ml-top {
+    grid-template-columns: 1fr;
+  }
+
+  .ml-nav-row {
+    padding-left: 0;
+    flex-wrap: wrap;
+  }
+
+  .ml-logo-img {
+    height: 92px;
+  }
+
+  .ml-search-input {
+    font-size: 18px;
+  }
+}
+
+/* ===== TRAVIESA Brand Visual Override (solo estilos) ===== */
+
+:root {
+  --bg: #F2F2F2;
+  --bg-accent: #F2F2F2;
+  --text: #111111;
+  --muted: #111111;
+  --primary: #E9BDC6;
+  --primary-dark: #D98F9E;
+  --card: #FFFFFF;
+  --border: #E9BDC6;
+  --ink: #111111;
+}
+
+body {
+  font-family: "Montserrat", sans-serif;
+  color: #111111;
+  background: #F2F2F2;
+}
+
+.container {
+  padding: 0 28px 28px;
+}
+
+.ml-header {
+  background: #FFFFFF;
+  border-bottom: 1px solid #E9BDC6;
+  box-shadow: 0 2px 12px rgba(17, 17, 17, 0.05);
+}
+
+.ml-logo-img {
+  height: 152px;
+  mix-blend-mode: normal;
+}
+
+.ml-location-link {
+  color: #111111;
+  font-size: 13px;
+}
+
+.ml-search-wrap {
+  background: #FFFFFF;
+  border: 1px solid #E9BDC6;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.06);
+}
+
+.ml-search-input {
+  color: #111111;
+  font-family: "Montserrat", sans-serif;
+  font-size: 22px;
+}
+
+.ml-search-input::placeholder {
+  color: #111111;
+  opacity: 0.45;
+}
+
+.ml-search-button {
+  background: #FFFFFF;
+  border-left: 1px solid #E9BDC6;
+  color: #111111;
+}
+
+.ml-nav-row .nav-link {
+  color: #111111;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  font-size: 17px;
+}
+
+.ml-icon-link {
+  color: #111111;
+}
+
+.ml-icon-link:hover,
+.ml-icon-link.active {
+  color: #D98F9E;
+}
+
+.nav-link.active {
+  color: #111111;
+}
+
+.nav-link.active::after {
+  background: #D98F9E;
+}
+
+.nav-badge {
+  background: #D98F9E;
+  color: #FFFFFF;
+}
+
+.form,
+.card,
+.table-row,
+.cart-item,
+.hero,
+.modal,
+.saved-methods,
+.mp-brick-container,
+.image-upload-card,
+.product-main img,
+.product-main video,
+.product-thumbs .thumb,
+.image-thumb {
+  background: #FFFFFF;
+  border-color: #E9BDC6;
+  box-shadow: 0 6px 16px rgba(17, 17, 17, 0.06);
+}
+
+.hero {
+  background: #FFFFFF;
+}
+
+.hero h1,
+.product-info h2,
+.profile-view h2,
+.modal h2,
+.form h2,
+.related h3 {
+  font-family: "Playfair Display", serif;
+  font-weight: 700;
+  color: #111111;
+  letter-spacing: 0;
+}
+
+.hero h1 {
+  font-size: 42px;
+  line-height: 1.08;
+}
+
+.related h3,
+.form h2,
+.modal h2,
+.profile-view h2,
+.product-info h2 {
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.hero p,
+.helper,
+.badge,
+.table-row,
+.price,
+.card strong,
+.cart-item strong,
+.ml-location-link,
+.ml-nav-row .nav-link,
+.button,
+.form input,
+.form select,
+.form textarea {
+  font-family: "Montserrat", sans-serif;
+  color: #111111;
+}
+
+.form input,
+.form select,
+.form textarea,
+.qty-control,
+.ml-search-wrap,
+.table-row,
+.cart-item,
+.card,
+.button,
+.image-upload-card,
+.saved-methods,
+.mp-brick-container,
+.product-main img,
+.product-main video,
+.product-thumbs .thumb,
+.image-thumb,
+.modal,
+.hero,
+.form {
+  border-radius: 12px;
+}
+
+.button {
+  background: #E9BDC6;
+  color: #111111;
+  border: 1px solid #E9BDC6;
+  box-shadow: 0 4px 10px rgba(17, 17, 17, 0.08);
+}
+
+.button:hover {
+  background: #D98F9E;
+  color: #FFFFFF;
+}
+
+.button:disabled:hover {
+  background: #E9BDC6;
+  color: #111111;
+}
+
+.button.secondary {
+  background: #FFFFFF;
+  color: #111111;
+  border: 1px solid #E9BDC6;
+}
+
+.button.secondary:hover,
+.button.secondary.active {
+  background: #E9BDC6;
+  color: #111111;
+}
+
+.profile-banner,
+.badge {
+  background: #F2F2F2;
+  border: 1px solid #E9BDC6;
+}
+
+.modal-backdrop,
+.route-loader-backdrop {
+  background: rgba(17, 17, 17, 0.28);
+}
+
+.route-loader {
+  border: 6px solid rgba(255, 255, 255, 0.75);
+  border-top-color: #E9BDC6;
+}
+
+.image-delete,
+.cart-remove,
+.card-delete {
+  background: rgba(17, 17, 17, 0.65);
+  color: #FFFFFF;
+}
+
+@media (max-width: 920px) {
+  .hero h1 {
+    font-size: 34px;
+  }
+
+  .related h3,
+  .form h2,
+  .modal h2,
+  .profile-view h2,
+  .product-info h2 {
+    font-size: 30px;
+  }
+
+  .ml-logo-img {
+    height: 122px;
+  }
+}
+
+/* Ajuste de layout solicitado */
+.hero {
+  display: none !important;
+}
+
+.ml-header {
+  position: relative;
+  min-height: 228px;
+  padding: 12px 24px 18px;
+}
+
+.ml-top {
+  display: block;
+}
+
+.ml-brand-block {
+  width: 250px;
+}
+
+.ml-logo-link {
+  width: 210px;
+  height: 126px;
+  overflow: hidden;
+}
+
+.ml-logo-img {
+  width: 100%;
+  height: 176px;
+  object-fit: cover;
+  object-position: center 20%;
+}
+
+.ml-search-wrap {
+  position: absolute;
+  left: 308px;
+  right: 440px;
+  bottom: 96px;
+  margin-top: 0;
+}
+
+.ml-nav-row {
+  position: absolute;
+  right: 24px;
+  bottom: 100px;
+  padding-left: 0;
+}
+
+.ml-header::after {
+  content: "BLANQUERIA Y BAZAR";
+  position: absolute;
+  left: 308px;
+  bottom: 64px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: #111111;
+  opacity: 0.72;
+}
+
+@media (max-width: 1200px) {
+  .ml-search-wrap {
+    right: 360px;
+  }
+}
+
+@media (max-width: 920px) {
+  .ml-header {
+    min-height: auto;
+    padding-bottom: 14px;
+  }
+
+  .ml-logo-link {
+    width: 180px;
+    height: 108px;
+  }
+
+  .ml-logo-img {
+    height: 150px;
+  }
+
+  .ml-search-wrap {
+    position: static;
+    margin-top: 10px;
+  }
+
+  .ml-nav-row {
+    position: static;
+    margin-top: 10px;
+    justify-content: flex-start;
+  }
+
+  .ml-header::after {
+    position: static;
+    display: block;
+    margin-top: 6px;
+    margin-left: 2px;
   }
 }

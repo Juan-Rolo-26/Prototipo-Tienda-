@@ -1,13 +1,20 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Routes, Route, Link, NavLink, useNavigate, useLocation } from "react-router-dom";
+import { Routes, Route, Link, NavLink, useLocation } from "react-router-dom";
 import Home from "./pages/Home";
 import Checkout from "./pages/Checkout";
 import AdminLogin from "./pages/AdminLogin";
 import AdminPanel from "./pages/AdminPanel";
 import ProductDetail from "./pages/ProductDetail";
+import LocationPage from "./pages/LocationPage";
+import PurchasesPage from "./pages/PurchasesPage";
 import logo from "./assets/logo.png";
 import AuthModal from "./components/AuthModal";
 import { fetchAdminStatus, fetchCustomer, loginWithGoogle } from "./api";
+function formatLocation(profile) {
+  if (!profile?.address1) return "Agregar ubicacion";
+  const line = [profile.address1, profile.city, profile.province].filter(Boolean).join(" · ");
+  return line || "Agregar ubicacion";
+}
 
 function App() {
   const [cart, setCart] = useState([]);
@@ -18,19 +25,21 @@ function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [authToast, setAuthToast] = useState(null);
-  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [cartPulse, setCartPulse] = useState(false);
-  const cartIconRef = useRef(null);
-  const navigate = useNavigate();
+  const [lotPulse, setLotPulse] = useState(false);
+  const [lotOpen, setLotOpen] = useState(false);
+  const [routeLoading, setRouteLoading] = useState(true);
+  const lotIconRef = useRef(null);
   const location = useLocation();
 
   React.useEffect(() => {
-    setSearchOpen(false);
+    setAuthOpen(false);
   }, [location.pathname]);
 
   React.useEffect(() => {
-    setAuthOpen(false);
+    setRouteLoading(true);
+    const timer = setTimeout(() => setRouteLoading(false), 2000);
+    return () => clearTimeout(timer);
   }, [location.pathname]);
 
   React.useEffect(() => {
@@ -55,14 +64,14 @@ function App() {
       });
   }, [customerToken]);
 
-  const cartCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
+  const lotCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
-  const animateToCart = (product, event) => {
-    if (!cartIconRef.current || !event) return;
-    const cartRect = cartIconRef.current.getBoundingClientRect();
+  const animateToLot = (product, event) => {
+    if (!lotIconRef.current || !event) return;
+    const lotRect = lotIconRef.current.getBoundingClientRect();
     const img = document.createElement("img");
     img.src = `${import.meta.env.VITE_API_URL || "http://localhost:4000"}${product.image}`;
-    img.className = "cart-fly";
+    img.className = "lot-fly";
     const startX = event.clientX;
     const startY = event.clientY;
     img.style.left = `${startX}px`;
@@ -70,10 +79,10 @@ function App() {
     document.body.appendChild(img);
 
     requestAnimationFrame(() => {
-      const endX = cartRect.left + cartRect.width / 2;
-      const endY = cartRect.top + cartRect.height / 2;
-      img.style.transform = `translate(${endX - startX}px, ${endY - startY}px) scale(0.1)`;
-      img.style.opacity = "0.6";
+      const endX = lotRect.left + lotRect.width / 2;
+      const endY = lotRect.top + lotRect.height / 2;
+      img.style.transform = `translate(${endX - startX}px, ${endY - startY}px) scale(0.15)`;
+      img.style.opacity = "0.3";
     });
 
     img.addEventListener(
@@ -84,8 +93,10 @@ function App() {
       { once: true }
     );
 
-    setCartPulse(true);
-    setTimeout(() => setCartPulse(false), 300);
+    setLotOpen(true);
+    setLotPulse(true);
+    setTimeout(() => setLotPulse(false), 900);
+    setTimeout(() => setLotOpen(false), 1000);
   };
 
   const addToCart = (product, quantity, event) => {
@@ -112,7 +123,7 @@ function App() {
         },
       ];
     });
-    animateToCart(product, event);
+    animateToLot(product, event);
   };
 
   const removeFromCart = (productId) => {
@@ -168,62 +179,69 @@ function App() {
 
   return (
     <div className="container">
-      <header className="header">
-        <nav className="nav-left">
-          <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/">
-            Tienda
-          </NavLink>
-        </nav>
-
-        <Link className="logo-center" to="/" aria-label="Volver a tienda">
-          <img className="logo-img" src={logo} alt="Bazar Velazquez" />
-        </Link>
-
-        <nav className="nav-right">
-          <div className="search-wrap">
-            <button
-              className={`nav-icon ${searchOpen ? "active" : ""}`}
-              type="button"
-              aria-label="Buscar"
-              onClick={() => setSearchOpen((prev) => !prev)}
+      <header className="header ml-header">
+        <div className="ml-top">
+          <div className="ml-brand-block">
+            <Link className="ml-logo-link" to="/" aria-label="Volver a tienda">
+              <img className="ml-logo-img" src={logo} alt="Bazar Velazquez" />
+            </Link>
+            <Link
+              className="ml-location-link"
+              to="/ubicacion"
+              onClick={(event) => {
+                if (!customerToken) {
+                  event.preventDefault();
+                  setAuthOpen(true);
+                }
+              }}
             >
+              <img
+                className="ml-pin-icon"
+                src="https://cdn-icons-png.flaticon.com/512/2794/2794702.png"
+                alt="Ubicacion"
+              />
+              <span>{formatLocation(customerProfile)}</span>
+            </Link>
+          </div>
+
+          <div className="ml-search-wrap">
+            <input
+              className="ml-search-input"
+              type="search"
+              placeholder="Busca productos, marcas y mas...."
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+            />
+            <button className="ml-search-button" type="button" aria-label="Buscar">
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.6" />
                 <path d="M16 16l4 4" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </button>
-            <input
-              className={`search-input ${searchOpen ? "open" : ""}`}
-              type="search"
-              placeholder="Buscar producto..."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              autoFocus={searchOpen}
-              aria-hidden={!searchOpen}
-            />
           </div>
+        </div>
+
+        <nav className="ml-nav-row">
+          <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/">
+            Tienda
+          </NavLink>
+          <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/mis-compras">
+            Mis compras
+          </NavLink>
           <NavLink
-            ref={cartIconRef}
-            className={({ isActive }) => `nav-icon ${isActive ? "active" : ""} ${cartPulse ? "pulse" : ""}`}
+            ref={lotIconRef}
+            className={({ isActive }) => `ml-icon-link lot-icon ${isActive ? "active" : ""} ${lotPulse ? "pulse" : ""} ${lotOpen ? "open" : ""}`}
             to="/checkout"
-            aria-label="Carrito"
+            aria-label="Lote"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M7 6h14l-2 9H8L6 3H3" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-              <circle cx="9" cy="20" r="1.6" fill="currentColor" />
-              <circle cx="18" cy="20" r="1.6" fill="currentColor" />
+              <path className="box-base" d="M4 9l8-4 8 4-8 4-8-4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              <path d="M4 9v7l8 4 8-4V9" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              <path className="box-lid" d="M12 13V5" fill="none" stroke="currentColor" strokeWidth="1.6" />
             </svg>
-            <span className="nav-badge">{cartCount}</span>
+            <span className="nav-badge">{lotCount}</span>
           </NavLink>
-          <button
-            className="nav-icon"
-            type="button"
-            aria-label="Usuario"
-            onClick={(event) => {
-              event.stopPropagation();
-              setAuthOpen(true);
-            }}
-          >
+          <button className="ml-icon-link" type="button" aria-label="Usuario" onClick={() => setAuthOpen(true)}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
               <path d="M4 20c1.6-3 4.3-4.5 8-4.5s6.4 1.5 8 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
@@ -238,6 +256,18 @@ function App() {
           element={<Home onAdd={addToCart} searchQuery={searchQuery} cart={cart} isAdmin={customerIsAdmin} />}
         />
         <Route path="/producto/:id" element={<ProductDetail onAdd={addToCart} />} />
+        <Route path="/mis-compras" element={<PurchasesPage />} />
+        <Route
+          path="/ubicacion"
+          element={
+            <LocationPage
+              customerToken={customerToken}
+              customerProfile={customerProfile}
+              onCustomerUpdate={setCustomerProfile}
+              onRequireLogin={() => setAuthOpen(true)}
+            />
+          }
+        />
         <Route
           path="/checkout"
           element={
@@ -276,6 +306,12 @@ function App() {
         onLogout={handleCustomerLogout}
       />
       {authToast && <div className="toast">{authToast}</div>}
+
+      {routeLoading && (
+        <div className="route-loader-backdrop">
+          <div className="route-loader" aria-label="Cargando" />
+        </div>
+      )}
     </div>
   );
 }
