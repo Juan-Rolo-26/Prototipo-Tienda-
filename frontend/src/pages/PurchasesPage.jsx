@@ -2,9 +2,12 @@ import React from "react";
 
 function PurchasesPage() {
   return (
-    <section className="form">
+    <section className="form purchases-empty">
       <h2>Mis compras</h2>
-      <p className="helper">Aun no hay compras registradas para mostrar.</p>
+      <p className="purchases-empty-title">¡Hacé tu primera compra!</p>
+      <p className="helper purchases-empty-subtitle">
+        Aqui podras ver tus compras realizadas, Aun no hay ninguna registrada
+      </p>
     </section>
   );
 }
