@@ -412,7 +412,7 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
               disabled={cart.length === 0}
               onClick={() => setStep("checkout")}
             >
-              Finalizar compra
+              Continuar compra
             </button>
           ) : (
             <form className="checkout-form" onSubmit={handleInitPayment}>
@@ -519,7 +519,7 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
               </select>
 
               <button className="button" type="submit" disabled={loading}>
-                {loading ? "Preparando pago..." : "Continuar al pago"}
+                {loading ? "Preparando pago..." : "Finalizar compra"}
               </button>
             </form>
           )}

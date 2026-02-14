@@ -1,5 +1,6 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Routes, Route, Link, NavLink, useLocation } from "react-router-dom";
+import { Routes, Route, Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import Lottie from "lottie-react";
 import Home from "./pages/Home";
 import Checkout from "./pages/Checkout";
 import AdminLogin from "./pages/AdminLogin";
@@ -8,6 +9,7 @@ import ProductDetail from "./pages/ProductDetail";
 import LocationPage from "./pages/LocationPage";
 import PurchasesPage from "./pages/PurchasesPage";
 import logo from "./assets/logo.png";
+import routeLoaderAnimation from "./assets/route-loader.json";
 import AuthModal from "./components/AuthModal";
 import { fetchAdminStatus, fetchCustomer, loginWithGoogle } from "./api";
 function formatLocation(profile) {
@@ -25,22 +27,45 @@ function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
   const [authToast, setAuthToast] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [lotPulse, setLotPulse] = useState(false);
   const [lotOpen, setLotOpen] = useState(false);
+  const [lotPreviewOpen, setLotPreviewOpen] = useState(false);
   const [routeLoading, setRouteLoading] = useState(true);
   const lotIconRef = useRef(null);
+  const routeTimerRef = useRef(null);
+  const lotPreviewCloseTimerRef = useRef(null);
   const location = useLocation();
+  const navigate = useNavigate();
+
+  const startRouteLoader = React.useCallback(() => {
+    if (routeTimerRef.current) clearTimeout(routeTimerRef.current);
+    setRouteLoading(true);
+    routeTimerRef.current = setTimeout(() => setRouteLoading(false), 2000);
+  }, []);
+
+  const openLotPreview = React.useCallback(() => {
+    if (lotPreviewCloseTimerRef.current) clearTimeout(lotPreviewCloseTimerRef.current);
+    setLotPreviewOpen(true);
+  }, []);
+
+  const closeLotPreviewWithDelay = React.useCallback(() => {
+    if (lotPreviewCloseTimerRef.current) clearTimeout(lotPreviewCloseTimerRef.current);
+    lotPreviewCloseTimerRef.current = setTimeout(() => setLotPreviewOpen(false), 420);
+  }, []);
 
   React.useEffect(() => {
     setAuthOpen(false);
   }, [location.pathname]);
 
   React.useEffect(() => {
-    setRouteLoading(true);
-    const timer = setTimeout(() => setRouteLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, [location.pathname]);
+    startRouteLoader();
+    return () => {
+      if (routeTimerRef.current) clearTimeout(routeTimerRef.current);
+      if (lotPreviewCloseTimerRef.current) clearTimeout(lotPreviewCloseTimerRef.current);
+    };
+  }, [location.pathname, startRouteLoader]);
 
   React.useEffect(() => {
     if (!customerToken) {
@@ -139,6 +164,7 @@ function App() {
   };
 
   const clearCart = () => setCart([]);
+  const previewTotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
 
   const handleLogin = (token) => {
     localStorage.setItem("adminToken", token);
@@ -182,7 +208,16 @@ function App() {
       <header className="header ml-header">
         <div className="ml-top">
           <div className="ml-brand-block">
-            <Link className="ml-logo-link" to="/" aria-label="Volver a tienda">
+            <Link
+              className="ml-logo-link"
+              to="/"
+              aria-label="Volver a tienda"
+              onClick={() => {
+                setSearchInput("");
+                setSearchQuery("");
+                startRouteLoader();
+              }}
+            >
               <img className="ml-logo-img" src={logo} alt="Bazar Velazquez" />
             </Link>
             <Link
@@ -209,8 +244,18 @@ function App() {
               className="ml-search-input"
               type="search"
               placeholder="Busca productos, marcas y mas...."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  const nextQuery = String(searchInput || "").trim();
+                  setSearchQuery(nextQuery);
+                  if (location.pathname !== "/") {
+                    navigate("/");
+                  }
+                  startRouteLoader();
+                }
+              }}
             />
             <button className="ml-search-button" type="button" aria-label="Buscar">
               <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -228,19 +273,80 @@ function App() {
           <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/mis-compras">
             Mis compras
           </NavLink>
-          <NavLink
-            ref={lotIconRef}
-            className={({ isActive }) => `ml-icon-link lot-icon ${isActive ? "active" : ""} ${lotPulse ? "pulse" : ""} ${lotOpen ? "open" : ""}`}
-            to="/checkout"
-            aria-label="Lote"
+          <div
+            className="lot-hover-wrap"
+            onMouseEnter={openLotPreview}
+            onMouseLeave={closeLotPreviewWithDelay}
           >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path className="box-base" d="M4 9l8-4 8 4-8 4-8-4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
-              <path d="M4 9v7l8 4 8-4V9" fill="none" stroke="currentColor" strokeWidth="1.6" />
-              <path className="box-lid" d="M12 13V5" fill="none" stroke="currentColor" strokeWidth="1.6" />
-            </svg>
-            <span className="nav-badge">{lotCount}</span>
-          </NavLink>
+            <NavLink
+              ref={lotIconRef}
+              className={({ isActive }) => `ml-icon-link lot-icon ${isActive ? "active" : ""} ${lotPulse ? "pulse" : ""} ${lotOpen ? "open" : ""}`}
+              to="/checkout"
+              aria-label="Lote"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path className="box-base" d="M4 9l8-4 8 4-8 4-8-4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M4 9v7l8 4 8-4V9" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <path className="box-lid" d="M12 13V5" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              </svg>
+              <span className="nav-badge">{lotCount}</span>
+            </NavLink>
+            {lotPreviewOpen && (
+              <div
+                className="lot-preview"
+                onMouseEnter={openLotPreview}
+                onMouseLeave={closeLotPreviewWithDelay}
+              >
+                <h4>Lote</h4>
+                {cart.length === 0 ? (
+                  <p className="helper">No hay productos en el lote.</p>
+                ) : (
+                  <>
+                    <div className="lot-preview-list">
+                      {cart.map((item) => (
+                        <div key={item.productId} className="lot-preview-item">
+                          <img src={item.image} alt={item.name} />
+                          <div className="lot-preview-info">
+                            <strong>{item.name}</strong>
+                            <span>{new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(item.price * item.quantity)}</span>
+                            <div className="lot-preview-qty">
+                              <button
+                                type="button"
+                                onClick={() => updateCartQuantity(item.productId, Math.max(1, item.quantity - 1))}
+                                disabled={item.quantity <= 1}
+                              >
+                                -
+                              </button>
+                              <span>{item.quantity}</span>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateCartQuantity(item.productId, Math.min(Number(item.stock) || 1, item.quantity + 1))
+                                }
+                                disabled={item.quantity >= (Number(item.stock) || 1)}
+                              >
+                                +
+                              </button>
+                            </div>
+                          </div>
+                          <button className="lot-preview-remove" type="button" onClick={() => removeFromCart(item.productId)}>
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="lot-preview-footer">
+                      <span>Total</span>
+                      <strong>{new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(previewTotal)}</strong>
+                    </div>
+                    <Link className="button lot-preview-go" to="/checkout">
+                      Ir al lote
+                    </Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
           <button className="ml-icon-link" type="button" aria-label="Usuario" onClick={() => setAuthOpen(true)}>
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
@@ -309,7 +415,9 @@ function App() {
 
       {routeLoading && (
         <div className="route-loader-backdrop">
-          <div className="route-loader" aria-label="Cargando" />
+          <div className="route-loader" aria-label="Cargando">
+            <Lottie animationData={routeLoaderAnimation} loop autoplay />
+          </div>
         </div>
       )}
     </div>

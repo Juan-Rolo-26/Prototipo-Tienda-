@@ -1,8 +1,44 @@
 import React, { useEffect, useState } from "react";
 import { deleteProduct, fetchProducts } from "../api";
 import ProductCard from "../components/ProductCard";
-import cursorNormal from "../assets/cursor-normal.png";
-import cursorClick from "../assets/cursor-click.png";
+import BundleAnimation from "../components/BundleAnimation";
+
+function normalizeSearchText(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getWordVariants(word) {
+  const variants = new Set([word]);
+  if (word.endsWith("es") && word.length > 3) variants.add(word.slice(0, -2));
+  if (word.endsWith("s") && word.length > 2) variants.add(word.slice(0, -1));
+  return Array.from(variants);
+}
+
+function matchesSearch(name, query) {
+  const normalizedName = normalizeSearchText(name);
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return true;
+  if (normalizedName.includes(normalizedQuery)) return true;
+
+  const productWords = normalizedName.split(" ").filter(Boolean);
+  const queryWords = normalizedQuery.split(" ").filter(Boolean);
+
+  return queryWords.every((queryWord) => {
+    const queryVariants = getWordVariants(queryWord);
+    return productWords.some((productWord) => {
+      const productVariants = getWordVariants(productWord);
+      return queryVariants.some((qv) =>
+        productVariants.some((pv) => pv.includes(qv) || qv.includes(pv))
+      );
+    });
+  });
+}
 
 function Home({ onAdd, searchQuery, cart, isAdmin }) {
   const [products, setProducts] = useState([]);
@@ -37,41 +73,24 @@ function Home({ onAdd, searchQuery, cart, isAdmin }) {
     }
   };
 
-  const normalizedQuery = String(searchQuery || "").trim().toLowerCase();
+  const normalizedQuery = normalizeSearchText(searchQuery);
   const filteredProducts = normalizedQuery
-    ? products.filter((product) => product.name.toLowerCase().includes(normalizedQuery))
+    ? products.filter((product) => matchesSearch(product.name, normalizedQuery))
     : products;
 
   return (
     <div>
-      <section className="promo-banner" aria-label="Banner principal">
-        <div className="promo-copy">
-          <h2>Arma tu propio lote a precios mayoristas</h2>
-          <p>Selecciona prendas unicas y crea tu propio lote personalizado.</p>
-        </div>
-        <div className="promo-box-scene" aria-hidden="true">
-          <div className="promo-box">
-            <div className="promo-lid promo-lid-left" />
-            <div className="promo-lid promo-lid-right" />
-            <div className="promo-hand">
-              <img className="promo-hand-img promo-hand-normal" src={cursorNormal} alt="" />
-              <img className="promo-hand-img promo-hand-click" src={cursorClick} alt="" />
-            </div>
-            <div className="promo-clothes">
-              <span className="cloth cloth-a" />
-              <span className="cloth cloth-b" />
-              <span className="cloth cloth-c" />
-              <span className="cloth cloth-d" />
-              <span className="cloth cloth-e" />
-            </div>
-            <div className="promo-box-front" />
-            <div className="promo-check">
-              <span className="promo-check-icon">✓</span>
-              <span>Lista para enviar</span>
-            </div>
+      {!normalizedQuery && (
+        <section className="promo-banner" aria-label="Banner principal">
+          <div className="promo-copy">
+            <h2>Arma tu propio lote a precios mayoristas</h2>
+            <p>Selecciona prendas unicas y crea tu propio lote personalizado.</p>
           </div>
-        </div>
-      </section>
+          <div className="promo-box-scene">
+            <BundleAnimation />
+          </div>
+        </section>
+      )}
 
       <section className="hero">
         <span className="badge">Mayorista · Productos unicos</span>
