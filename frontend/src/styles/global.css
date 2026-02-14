@@ -1226,13 +1226,14 @@ body {
 
 .ml-brand-block {
   width: 252px;
+  gap: 4px;
 }
 
 .ml-logo-link {
   width: 228px;
   height: 134px;
   overflow: visible;
-  transform: translateY(-12px);
+  transform: translateY(-2px);
 }
 
 .ml-logo-img {
@@ -1276,7 +1277,7 @@ body {
   .ml-logo-link {
     width: 190px;
     height: 122px;
-    transform: translateY(-8px);
+    transform: translateY(-2px);
   }
 
   .ml-logo-img {
@@ -1553,11 +1554,24 @@ body {
 /* ===== Promo v2: secuencia lenta en 3 fases ===== */
 .promo-banner {
   background: linear-gradient(120deg, #e4dbc9 0%, #d3c8b1 100%);
+  min-height: 244px;
+  padding: 18px 24px;
+  margin: 12px 0 18px;
+}
+
+.promo-copy h2 {
+  font-size: 44px;
+  line-height: 0.98;
+}
+
+.promo-copy p {
+  font-size: 17px;
 }
 
 .promo-box {
-  width: min(460px, 100%);
+  width: min(390px, 100%);
   aspect-ratio: 1.18 / 0.9;
+  animation: boxShake 24s ease-in-out infinite;
 }
 
 .promo-box-front {
@@ -1606,7 +1620,7 @@ body {
   background: linear-gradient(180deg, #9e7841 0%, #7f5d2d 100%);
   opacity: 0;
   z-index: 1;
-  animation: boxInterior 24s ease-in-out infinite;
+  animation: boxInterior 24s linear infinite;
 }
 
 .promo-lid {
@@ -1628,9 +1642,9 @@ body {
 .promo-clothes {
   left: 19%;
   right: 19%;
-  bottom: 65%;
+  bottom: 64%;
   height: 26%;
-  animation: clothesGroupMove 24s ease-in-out infinite;
+  animation: clothesGroupMove 24s linear infinite;
   z-index: 3;
 }
 
@@ -1649,7 +1663,7 @@ body {
   left: 2%;
   top: 16%;
   background: linear-gradient(140deg, #242424 0%, #111111 72%);
-  animation: clothASequence 24s ease-in-out infinite;
+  animation: clothASequence 24s linear infinite;
 }
 .cloth-b {
   width: 58px;
@@ -1657,7 +1671,7 @@ body {
   left: 20%;
   top: 2%;
   background: linear-gradient(140deg, #e5a0af 0%, #cc7889 72%);
-  animation: clothBSequence 24s ease-in-out infinite;
+  animation: clothBSequence 24s linear infinite;
 }
 .cloth-c {
   width: 76px;
@@ -1665,7 +1679,7 @@ body {
   left: 40%;
   top: 14%;
   background: linear-gradient(140deg, #fbfbfb 0%, #dddddd 72%);
-  animation: clothCSequence 24s ease-in-out infinite;
+  animation: clothCSequence 24s linear infinite;
 }
 .cloth-d {
   width: 62px;
@@ -1673,7 +1687,7 @@ body {
   left: 62%;
   top: 0%;
   background: linear-gradient(140deg, #ceb181 0%, #b08a50 72%);
-  animation: clothDSequence 24s ease-in-out infinite;
+  animation: clothDSequence 24s linear infinite;
 }
 .cloth-e {
   width: 56px;
@@ -1681,58 +1695,38 @@ body {
   left: 78%;
   top: 18%;
   background: linear-gradient(140deg, #2d2d2d 0%, #151515 72%);
-  animation: clothESequence 24s ease-in-out infinite;
+  animation: clothESequence 24s linear infinite;
 }
 
 .promo-hand {
   position: absolute;
   right: -2%;
-  top: 10%;
-  width: 88px;
-  height: 100px;
+  top: 14%;
+  width: 130px;
+  height: 130px;
   z-index: 5;
   pointer-events: none;
-  transform-origin: 50% 80%;
-  animation: handMove 24s ease-in-out infinite;
+  animation: handMove 24s linear infinite;
 }
 
-.promo-hand::before {
-  content: "";
+.promo-hand-img {
   position: absolute;
-  inset: 18px 10px 10px 24px;
-  border-radius: 28px 28px 20px 22px;
-  background: #161616;
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.22);
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.26));
 }
 
-.promo-hand::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0;
-  width: 28px;
-  height: 72px;
-  border-radius: 16px;
-  background: #161616;
-  transform: rotate(-34deg);
-  transform-origin: bottom center;
-}
-
-.promo-click-ray {
-  position: absolute;
-  width: 12px;
-  height: 4px;
-  border-radius: 999px;
-  background: #1a1a1a;
+.promo-hand-normal {
   opacity: 0;
-  transform: scale(0.7);
-  animation: clickPulse 24s ease-in-out infinite;
+  animation: handNormalState 24s linear infinite;
 }
 
-.promo-click-ray-a { left: 6px; top: -8px; transform: rotate(-12deg); }
-.promo-click-ray-b { left: 24px; top: -14px; transform: rotate(22deg); }
-.promo-click-ray-c { left: 42px; top: -8px; transform: rotate(48deg); }
-.promo-click-ray-d { left: -2px; top: 8px; transform: rotate(-38deg); }
+.promo-hand-click {
+  opacity: 0;
+  animation: handClickState 24s linear infinite;
+}
 
 .promo-check {
   position: absolute;
@@ -1750,7 +1744,7 @@ body {
   font-weight: 600;
   opacity: 0;
   transform: translateY(8px) scale(0.95);
-  animation: checkSequence 24s ease-in-out infinite;
+  animation: checkSequence 24s linear infinite;
 }
 
 .promo-check-icon {
@@ -1767,100 +1761,119 @@ body {
 
 /* Secuencia: 1) cerrada+ropa visible 2) abre+entra ropa 3) cierra+tick */
 @keyframes lidLeftOpenClose {
-  0%, 36% { transform: rotateZ(0deg) rotateX(0deg); }
-  44%, 56% { transform: rotateZ(-16deg) rotateX(72deg); }
+  0%, 8% { transform: rotateZ(0deg) rotateX(0deg); }
+  8%, 26% { transform: rotateZ(-16deg) rotateX(72deg); }
+  26%, 58% { transform: rotateZ(-16deg) rotateX(72deg); }
+  58%, 70% { transform: rotateZ(0deg) rotateX(0deg); }
   70%, 100% { transform: rotateZ(0deg) rotateX(0deg); }
 }
 
 @keyframes lidRightOpenClose {
-  0%, 36% { transform: rotateZ(0deg) rotateX(0deg); }
-  44%, 56% { transform: rotateZ(16deg) rotateX(72deg); }
+  0%, 8% { transform: rotateZ(0deg) rotateX(0deg); }
+  8%, 26% { transform: rotateZ(16deg) rotateX(72deg); }
+  26%, 58% { transform: rotateZ(16deg) rotateX(72deg); }
+  58%, 70% { transform: rotateZ(0deg) rotateX(0deg); }
   70%, 100% { transform: rotateZ(0deg) rotateX(0deg); }
 }
 
 @keyframes clothesGroupMove {
-  0%, 52% { transform: translateY(0) scale(1); }
-  62% { transform: translateY(34px) scale(0.9); }
-  70% { transform: translateY(58px) scale(0.7); }
-  82%, 100% { transform: translateY(62px) scale(0.66); }
+  0%, 42% { transform: translateY(0) scale(1); }
+  42%, 58% { transform: translateY(40px) scale(0.78); }
+  58%, 100% { transform: translateY(58px) scale(0.62); }
 }
 
 @keyframes clothASequence {
-  0%, 9% { opacity: 0; }
-  10%, 58% { opacity: 1; }
-  66% { opacity: 0.85; }
-  74%, 100% { opacity: 0; }
+  0%, 29% { opacity: 0; }
+  29%, 54% { opacity: 1; }
+  54%, 60% { opacity: 0.92; }
+  60%, 100% { opacity: 0; }
 }
 
 @keyframes clothBSequence {
-  0%, 17% { opacity: 0; }
-  18%, 58% { opacity: 1; }
-  66% { opacity: 0.85; }
-  74%, 100% { opacity: 0; }
+  0%, 37% { opacity: 0; }
+  37%, 54% { opacity: 1; }
+  54%, 60% { opacity: 0.92; }
+  60%, 100% { opacity: 0; }
 }
 
 @keyframes clothCSequence {
-  0%, 17% { opacity: 0; }
-  18%, 58% { opacity: 1; }
-  66% { opacity: 0.85; }
-  74%, 100% { opacity: 0; }
+  0%, 37% { opacity: 0; }
+  37%, 54% { opacity: 1; }
+  54%, 60% { opacity: 0.92; }
+  60%, 100% { opacity: 0; }
 }
 
 @keyframes clothDSequence {
-  0%, 25% { opacity: 0; }
-  26%, 58% { opacity: 1; }
-  66% { opacity: 0.85; }
-  74%, 100% { opacity: 0; }
+  0%, 45% { opacity: 0; }
+  45%, 54% { opacity: 1; }
+  54%, 60% { opacity: 0.92; }
+  60%, 100% { opacity: 0; }
 }
 
 @keyframes clothESequence {
-  0%, 25% { opacity: 0; }
-  26%, 58% { opacity: 1; }
-  66% { opacity: 0.85; }
-  74%, 100% { opacity: 0; }
+  0%, 45% { opacity: 0; }
+  45%, 54% { opacity: 1; }
+  54%, 60% { opacity: 0.92; }
+  60%, 100% { opacity: 0; }
 }
 
 @keyframes boxInterior {
-  0%, 38% { opacity: 0; }
-  44%, 72% { opacity: 1; }
-  78%, 100% { opacity: 0; }
+  0%, 8% { opacity: 0; }
+  8%, 58% { opacity: 1; }
+  58%, 100% { opacity: 0; }
 }
 
 @keyframes handMove {
-  0%, 6% {
+  0%, 26% {
     opacity: 0;
-    transform: translateX(88px) translateY(8px) rotate(-16deg) scale(1);
+    transform: translateX(120px) translateY(0) scale(1);
   }
-  10% {
+  32% {
     opacity: 1;
-    transform: translateX(0) translateY(0) rotate(-16deg) scale(1);
+    transform: translateX(0) translateY(0) scale(1);
   }
-  18% { transform: translateX(-8px) translateY(2px) rotate(-16deg) scale(0.98); }
-  26% { transform: translateX(-16px) translateY(1px) rotate(-16deg) scale(0.98); }
-  34% { transform: translateX(-22px) translateY(0) rotate(-16deg) scale(0.98); }
   40% {
+    opacity: 1;
+    transform: translateX(0) translateY(0) scale(1);
+  }
+  58% {
     opacity: 0;
-    transform: translateX(-32px) translateY(-4px) rotate(-16deg) scale(0.95);
+    transform: translateX(0) translateY(0) scale(0.98);
   }
   100% {
     opacity: 0;
-    transform: translateX(88px) translateY(8px) rotate(-16deg) scale(1);
+    transform: translateX(120px) translateY(0) scale(1);
   }
 }
 
-@keyframes clickPulse {
-  0%, 8% { opacity: 0; }
-  10%, 11.5% { opacity: 1; }
-  12.5%, 16% { opacity: 0; }
-  18%, 19.5% { opacity: 1; }
-  20.5%, 24% { opacity: 0; }
-  26%, 27.5% { opacity: 1; }
-  28.5%, 100% { opacity: 0; }
+@keyframes handNormalState {
+  0%, 26% { opacity: 0; }
+  32%, 41% { opacity: 1; }
+  41%, 43% { opacity: 0; }
+  43%, 58% { opacity: 1; }
+  58%, 100% { opacity: 0; }
+}
+
+@keyframes handClickState {
+  0%, 41% { opacity: 0; }
+  41%, 43% { opacity: 1; }
+  43%, 100% { opacity: 0; }
+}
+
+@keyframes boxShake {
+  0%, 70%, 100% { transform: translateX(0); }
+  71% { transform: translateX(-2px); }
+  72% { transform: translateX(2px); }
+  73% { transform: translateX(-2px); }
+  74% { transform: translateX(2px); }
+  75% { transform: translateX(-1px); }
+  76% { transform: translateX(1px); }
+  77% { transform: translateX(0); }
 }
 
 @keyframes checkSequence {
-  0%, 76% { opacity: 0; transform: translateY(8px) scale(0.95); }
-  78%, 98% { opacity: 1; transform: translateY(0) scale(1); }
+  0%, 72% { opacity: 0; transform: translateY(8px) scale(0.95); }
+  74%, 94% { opacity: 1; transform: translateY(0) scale(1); }
   100% { opacity: 0; transform: translateY(10px) scale(0.95); }
 }
 

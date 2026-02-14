@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { deleteProduct, fetchProducts } from "../api";
 import ProductCard from "../components/ProductCard";
+import cursorNormal from "../assets/cursor-normal.png";
+import cursorClick from "../assets/cursor-click.png";
 
 function Home({ onAdd, searchQuery, cart, isAdmin }) {
   const [products, setProducts] = useState([]);
@@ -52,10 +54,8 @@ function Home({ onAdd, searchQuery, cart, isAdmin }) {
             <div className="promo-lid promo-lid-left" />
             <div className="promo-lid promo-lid-right" />
             <div className="promo-hand">
-              <span className="promo-click-ray promo-click-ray-a" />
-              <span className="promo-click-ray promo-click-ray-b" />
-              <span className="promo-click-ray promo-click-ray-c" />
-              <span className="promo-click-ray promo-click-ray-d" />
+              <img className="promo-hand-img promo-hand-normal" src={cursorNormal} alt="" />
+              <img className="promo-hand-img promo-hand-click" src={cursorClick} alt="" />
             </div>
             <div className="promo-clothes">
               <span className="cloth cloth-a" />
