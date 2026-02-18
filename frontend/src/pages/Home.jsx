@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { deleteProduct, fetchProducts } from "../api";
 import ProductCard from "../components/ProductCard";
-import BundleAnimation from "../components/BundleAnimation";
+import HeroCarousel from "../components/HeroCarousel";
 
 function normalizeSearchText(value) {
   return String(value || "")
@@ -81,15 +81,7 @@ function Home({ onAdd, searchQuery, cart, isAdmin }) {
   return (
     <div>
       {!normalizedQuery && (
-        <section className="promo-banner" aria-label="Banner principal">
-          <div className="promo-copy">
-            <h2>Arma tu propio lote a precios mayoristas</h2>
-            <p>Selecciona prendas unicas y crea tu propio lote personalizado.</p>
-          </div>
-          <div className="promo-box-scene">
-            <BundleAnimation />
-          </div>
-        </section>
+        <HeroCarousel />
       )}
 
       <section className="hero">

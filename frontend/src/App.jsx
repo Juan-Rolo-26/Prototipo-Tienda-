@@ -282,7 +282,7 @@ function App() {
               ref={lotIconRef}
               className={({ isActive }) => `ml-icon-link lot-icon ${isActive ? "active" : ""} ${lotPulse ? "pulse" : ""} ${lotOpen ? "open" : ""}`}
               to="/checkout"
-              aria-label="Lote"
+              aria-label="Mi paquete"
             >
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 <path className="box-base" d="M4 9l8-4 8 4-8 4-8-4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
@@ -297,7 +297,7 @@ function App() {
                 onMouseEnter={openLotPreview}
                 onMouseLeave={closeLotPreviewWithDelay}
               >
-                <h4>Lote</h4>
+                <h4>Mi paquete:</h4>
                 {cart.length === 0 ? (
                   <p className="helper">No hay productos en el lote.</p>
                 ) : (
@@ -340,7 +340,7 @@ function App() {
                       <strong>{new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(previewTotal)}</strong>
                     </div>
                     <Link className="button lot-preview-go" to="/checkout">
-                      Ir al lote
+                      Ver mi paquete
                     </Link>
                   </>
                 )}

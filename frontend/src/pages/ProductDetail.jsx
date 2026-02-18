@@ -131,7 +131,7 @@ function ProductDetail({ onAdd }) {
           {warning && <div className="helper">{warning}</div>}
 
           <button className="button product-add" type="button" onClick={handleAdd}>
-            Agregar al lote
+            Agregar al paquete
           </button>
         </div>
       </div>
