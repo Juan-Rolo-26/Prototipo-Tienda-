@@ -1,3 +1,4 @@
+console.log("🔥🔥🔥 SERVER BOOT VERSION 2026-02-19 🔥🔥🔥");
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
