@@ -1,8 +1,6 @@
 require("dotenv").config();
 
 const path = require("path");
-const fs = require("fs");
-const { execSync } = require("child_process");
 const express = require("express");
 const cors = require("cors");
 
@@ -15,8 +13,10 @@ const webhookRoutes = require("./routes/webhooks");
 const { ensureAdmins } = require("./utils/ensureAdmins");
 
 const app = express();
-const PORT = process.env.PORT || 4000;
-const FRONTEND_DIST = path.join(__dirname, "..", "..", "frontend", "dist");
+const PORT = process.env.PORT || 3000;
+
+// 🔹 IMPORTANTE: ahora el frontend dist está en public_html/dist
+const FRONTEND_DIST = path.join(__dirname, "..", "dist");
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
@@ -33,7 +33,8 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/webhooks", webhookRoutes);
 
-if (fs.existsSync(FRONTEND_DIST)) {
+// 🔹 Servir frontend build
+if (require("fs").existsSync(FRONTEND_DIST)) {
   app.use(express.static(FRONTEND_DIST));
   app.get(/^\/(?!api|uploads).*/, (_req, res) => {
     res.sendFile(path.join(FRONTEND_DIST, "index.html"));
@@ -42,13 +43,6 @@ if (fs.existsSync(FRONTEND_DIST)) {
 
 async function bootstrap() {
   try {
-    if (process.env.PRISMA_DB_PUSH_ON_START !== "false") {
-      execSync("npx prisma db push", {
-        cwd: path.join(__dirname, ".."),
-        stdio: "inherit",
-      });
-    }
-
     await ensureAdmins();
 
     app.listen(PORT, () => {
