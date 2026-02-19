@@ -45,6 +45,7 @@ router.post("/google", async (req, res) => {
   if (!idToken) {
     return res.status(400).json({ error: "Missing idToken" });
   }
+  console.log("GOOGLE_CLIENT_ID from env:", process.env.GOOGLE_CLIENT_ID);
   if (!process.env.GOOGLE_CLIENT_ID) {
     return res.status(500).json({ error: "Google client ID not configured" });
   }
@@ -82,7 +83,8 @@ router.post("/google", async (req, res) => {
     const isAdmin = adminEmailSet.has(payload.email.toLowerCase());
     res.json({ token, customer, isNew: !existing, isAdmin });
   } catch (error) {
-    res.status(401).json({ error: "Google auth failed" });
+    console.error("GOOGLE LOGIN ERROR:", error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 });
 
