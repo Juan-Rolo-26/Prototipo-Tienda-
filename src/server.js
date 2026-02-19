@@ -3,6 +3,7 @@ require("dotenv").config();
 const path = require("path");
 const express = require("express");
 const cors = require("cors");
+const { PrismaClient } = require("@prisma/client");
 
 const authRoutes = require("./routes/auth");
 const productRoutes = require("./routes/products");
@@ -13,6 +14,7 @@ const webhookRoutes = require("./routes/webhooks");
 const { ensureAdmins } = require("./utils/ensureAdmins");
 
 const app = express();
+const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
 
@@ -38,8 +40,133 @@ if (require("fs").existsSync(FRONTEND_DIST)) {
   });
 }
 
+async function ensureDatabaseSchema() {
+  await prisma.$connect();
+  await prisma.$executeRaw`PRAGMA foreign_keys = ON;`;
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "Admin" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "username" TEXT NOT NULL,
+      "passwordHash" TEXT NOT NULL,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE UNIQUE INDEX IF NOT EXISTS "Admin_username_key" ON "Admin"("username");
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "Customer" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "email" TEXT NOT NULL,
+      "firstName" TEXT,
+      "lastName" TEXT,
+      "province" TEXT,
+      "city" TEXT,
+      "address1" TEXT,
+      "address2" TEXT,
+      "postalCode" TEXT,
+      "phone" TEXT,
+      "mercadoPagoCustomerId" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL
+    );
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE UNIQUE INDEX IF NOT EXISTS "Customer_email_key" ON "Customer"("email");
+  `);
+  await prisma.$executeRawUnsafe(`
+    CREATE UNIQUE INDEX IF NOT EXISTS "Customer_mercadoPagoCustomerId_key" ON "Customer"("mercadoPagoCustomerId");
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "Product" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "name" TEXT NOT NULL,
+      "price" INTEGER NOT NULL,
+      "width" REAL NOT NULL,
+      "height" REAL NOT NULL,
+      "weight" REAL NOT NULL,
+      "stock" INTEGER NOT NULL DEFAULT 1,
+      "image" TEXT NOT NULL,
+      "description" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "ProductMedia" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "url" TEXT NOT NULL,
+      "type" TEXT NOT NULL,
+      "position" INTEGER NOT NULL,
+      "productId" TEXT NOT NULL,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "Order" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "customerId" TEXT,
+      "customerName" TEXT NOT NULL,
+      "province" TEXT NOT NULL,
+      "city" TEXT NOT NULL,
+      "address1" TEXT NOT NULL,
+      "address2" TEXT,
+      "postalCode" TEXT NOT NULL,
+      "phone" TEXT NOT NULL,
+      "deliveryMethod" TEXT NOT NULL,
+      "totalAmount" INTEGER NOT NULL DEFAULT 0,
+      "status" TEXT NOT NULL DEFAULT 'pending',
+      "paymentId" TEXT,
+      "paymentStatus" TEXT,
+      "statusDetail" TEXT,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE SET NULL ON UPDATE CASCADE
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "OrderItem" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "orderId" TEXT NOT NULL,
+      "productId" TEXT,
+      "productName" TEXT NOT NULL,
+      "productPrice" INTEGER NOT NULL,
+      "productImage" TEXT NOT NULL,
+      "quantity" INTEGER NOT NULL DEFAULT 1,
+      FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE CASCADE ON UPDATE CASCADE,
+      FOREIGN KEY ("productId") REFERENCES "Product"("id") ON DELETE SET NULL ON UPDATE CASCADE
+    );
+  `);
+
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "SavedPaymentMethod" (
+      "id" TEXT NOT NULL PRIMARY KEY,
+      "customerId" TEXT NOT NULL,
+      "mercadoPagoToken" TEXT,
+      "brand" TEXT NOT NULL,
+      "last4" TEXT NOT NULL,
+      "expirationMonth" INTEGER,
+      "expirationYear" INTEGER,
+      "cardholderName" TEXT,
+      "issuerId" TEXT,
+      "paymentMethodId" TEXT,
+      "isDefault" BOOLEAN NOT NULL DEFAULT false,
+      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" DATETIME NOT NULL,
+      FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE
+    );
+  `);
+}
+
 async function bootstrap() {
   try {
+    await ensureDatabaseSchema();
     await ensureAdmins();
 
     app.listen(PORT, () => {
