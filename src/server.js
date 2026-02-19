@@ -1,6 +1,8 @@
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
 }
+console.log("BOOT ENV GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+console.log("NODE_ENV:", process.env.NODE_ENV);
 
 const path = require("path");
 const express = require("express");
