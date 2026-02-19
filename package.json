@@ -5,8 +5,8 @@
   "scripts": {
     "build": "echo \"Backend build OK\"",
     "dev": "nodemon src/server.js",
-    "start": "npx prisma db push && npx prisma generate && node src/server.js",
-    "postinstall": "npm --prefix ../frontend install && npm --prefix ../frontend run build",
+    "start": "node node_modules/prisma/build/index.js db push && node node_modules/prisma/build/index.js generate && node src/server.js",
+    "postinstall": "npm --prefix frontend install && npm --prefix frontend run build",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate deploy"
   },

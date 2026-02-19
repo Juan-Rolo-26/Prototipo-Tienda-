@@ -14,9 +14,7 @@ const { ensureAdmins } = require("./utils/ensureAdmins");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
-// 🔹 IMPORTANTE: ahora el frontend dist está en public_html/dist
-const FRONTEND_DIST = path.join(__dirname, "..", "dist");
+const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
@@ -33,7 +31,6 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/webhooks", webhookRoutes);
 
-// 🔹 Servir frontend build
 if (require("fs").existsSync(FRONTEND_DIST)) {
   app.use(express.static(FRONTEND_DIST));
   app.get(/^\/(?!api|uploads).*/, (_req, res) => {
