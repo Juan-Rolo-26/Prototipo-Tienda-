@@ -7,6 +7,10 @@ const { requireCustomer } = require("../middleware/auth");
 
 const router = express.Router();
 const prisma = new PrismaClient();
+const GOOGLE_CLIENT_ID =
+  process.env.GOOGLE_CLIENT_ID ||
+  process.env.VITE_GOOGLE_CLIENT_ID ||
+  "578155351282-233f8gbjfff79iqcvs6pkp0vt7t1o1j4.apps.googleusercontent.com";
 const adminEmailSet = new Set(
   String(process.env.ADMIN_GOOGLE_EMAILS || "")
     .split(",")
@@ -44,16 +48,16 @@ router.post("/google", async (req, res) => {
   if (!idToken) {
     return res.status(400).json({ error: "Missing idToken" });
   }
-  console.log("GOOGLE_CLIENT_ID from env:", process.env.GOOGLE_CLIENT_ID);
-  if (!process.env.GOOGLE_CLIENT_ID) {
+  console.log("GOOGLE_CLIENT_ID resolved:", GOOGLE_CLIENT_ID);
+  if (!GOOGLE_CLIENT_ID) {
     return res.status(500).json({ error: "Google client ID not configured" });
   }
 
   try {
-    const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
     const ticket = await googleClient.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
     if (!payload || !payload.email) {
@@ -103,14 +107,14 @@ router.post("/google-admin", async (req, res) => {
   if (!idToken) {
     return res.status(400).json({ error: "Missing idToken" });
   }
-  if (!process.env.GOOGLE_CLIENT_ID) {
+  if (!GOOGLE_CLIENT_ID) {
     return res.status(500).json({ error: "Google client ID not configured" });
   }
   try {
-    const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+    const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID);
     const ticket = await googleClient.verifyIdToken({
       idToken,
-      audience: process.env.GOOGLE_CLIENT_ID,
+      audience: GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
     const email = payload?.email?.toLowerCase();
