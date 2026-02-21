@@ -20,7 +20,7 @@ function startFallback(error) {
     res.status(500).send("App bootstrap failed. Check /api/health for details.");
   });
 
-  app.listen(port, () => {
+  app.listen(port, "0.0.0.0", () => {
     console.error("Fallback server running on port", port);
     console.error(error);
   });
@@ -31,4 +31,3 @@ try {
 } catch (error) {
   startFallback(error);
 }
-

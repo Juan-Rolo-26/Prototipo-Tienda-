@@ -254,7 +254,7 @@ async function ensureDatabaseSchema() {
 
 async function bootstrap() {
   bootLog("bootstrap called");
-  app.listen(PORT, async () => {
+  app.listen(PORT, "0.0.0.0", async () => {
     console.log(`Server running on port ${PORT}`);
     bootLog(`Server running on port ${PORT}`);
     try {
