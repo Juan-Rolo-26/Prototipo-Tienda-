@@ -26,7 +26,10 @@ export async function loginWithGoogle(idToken) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idToken }),
   });
-  if (!res.ok) throw new Error("No se pudo iniciar sesion con Google");
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error || "No se pudo iniciar sesion con Google");
+  }
   return res.json();
 }
 

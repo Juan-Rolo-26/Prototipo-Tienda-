@@ -898,6 +898,14 @@ button {
   height: 27px;
 }
 
+.ml-user-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
 .lot-icon .box-lid {
   transform-origin: 12px 9px;
   transition: transform 0.32s ease;

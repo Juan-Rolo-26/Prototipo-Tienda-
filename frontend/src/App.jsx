@@ -12,6 +12,7 @@ import logo from "./assets/logo.png";
 import routeLoaderAnimation from "./assets/route-loader.json";
 import AuthModal from "./components/AuthModal";
 import { fetchAdminStatus, fetchCustomer, loginWithGoogle } from "./api";
+const CUSTOMER_PICTURE_KEY = "customerPicture";
 function formatLocation(profile) {
   if (!profile?.address1) return "Agregar ubicacion";
   const line = [profile.address1, profile.city, profile.province].filter(Boolean).join(" · ");
@@ -73,7 +74,10 @@ function App() {
       return;
     }
     fetchCustomer(customerToken)
-      .then((data) => setCustomerProfile(data.customer))
+      .then((data) => {
+        const picture = localStorage.getItem(CUSTOMER_PICTURE_KEY);
+        setCustomerProfile(picture ? { ...data.customer, googlePicture: picture } : data.customer);
+      })
       .catch(() => {
         localStorage.removeItem("customerToken");
         setCustomerToken(null);
@@ -182,6 +186,9 @@ function App() {
       const data = await loginWithGoogle(credential);
       localStorage.setItem("customerToken", data.token);
       localStorage.setItem("customerIsAdmin", data.isAdmin ? "true" : "false");
+      if (data.customer?.googlePicture) {
+        localStorage.setItem(CUSTOMER_PICTURE_KEY, data.customer.googlePicture);
+      }
       setCustomerToken(data.token);
       setCustomerProfile(data.customer);
       setCustomerIsAdmin(Boolean(data.isAdmin));
@@ -190,6 +197,8 @@ function App() {
       setAuthOpen(false);
     } catch (error) {
       console.error(error);
+      setAuthToast(error.message || "No se pudo iniciar sesion con Google");
+      setTimeout(() => setAuthToast(null), 3200);
     } finally {
       setAuthLoading(false);
     }
@@ -198,6 +207,7 @@ function App() {
   const handleCustomerLogout = () => {
     localStorage.removeItem("customerToken");
     localStorage.removeItem("customerIsAdmin");
+    localStorage.removeItem(CUSTOMER_PICTURE_KEY);
     setCustomerToken(null);
     setCustomerProfile(null);
     setCustomerIsAdmin(false);
@@ -348,10 +358,14 @@ function App() {
             )}
           </div>
           <button className="ml-icon-link" type="button" aria-label="Usuario" onClick={() => setAuthOpen(true)}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
-              <path d="M4 20c1.6-3 4.3-4.5 8-4.5s6.4 1.5 8 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
+            {customerProfile?.googlePicture ? (
+              <img className="ml-user-avatar" src={customerProfile.googlePicture} alt="Perfil" />
+            ) : (
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+                <path d="M4 20c1.6-3 4.3-4.5 8-4.5s6.4 1.5 8 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+              </svg>
+            )}
           </button>
         </nav>
       </header>
