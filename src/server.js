@@ -80,6 +80,9 @@ const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
 const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
 bootLog("Server file loaded");
 bootLog(`NODE_ENV=${process.env.NODE_ENV || "undefined"} PORT=${process.env.PORT || "undefined"}`);
+bootLog(`cwd=${process.cwd()}`);
+bootLog(`FRONTEND_DIST=${FRONTEND_DIST} exists=${fs.existsSync(FRONTEND_DIST)}`);
+bootLog(`DATABASE_URL exists=${Boolean(process.env.DATABASE_URL)}`);
 process.on("uncaughtException", (error) => bootLog("uncaughtException", error));
 process.on("unhandledRejection", (reason) => bootLog("unhandledRejection", reason));
 
@@ -114,11 +117,12 @@ if (fs.existsSync(FRONTEND_DIST)) {
 }
 
 async function ensureDatabaseSchema() {
-  if (!prisma) {
-    throw new Error("Prisma client unavailable");
-  }
-  await prisma.$connect();
-  await prisma.$executeRaw`PRAGMA foreign_keys = ON;`;
+  try {
+    if (!prisma) {
+      throw new Error("Prisma client unavailable");
+    }
+    await prisma.$connect();
+    await prisma.$executeRaw`PRAGMA foreign_keys = ON;`;
 
   await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "Admin" (
@@ -220,7 +224,7 @@ async function ensureDatabaseSchema() {
     );
   `);
 
-  await prisma.$executeRawUnsafe(`
+    await prisma.$executeRawUnsafe(`
     CREATE TABLE IF NOT EXISTS "SavedPaymentMethod" (
       "id" TEXT NOT NULL PRIMARY KEY,
       "customerId" TEXT NOT NULL,
@@ -237,7 +241,15 @@ async function ensureDatabaseSchema() {
       "updatedAt" DATETIME NOT NULL,
       FOREIGN KEY ("customerId") REFERENCES "Customer"("id") ON DELETE CASCADE ON UPDATE CASCADE
     );
-  `);
+    `);
+  } catch (error) {
+    startupErrors.push({
+      module: "ensureDatabaseSchema",
+      message: error.message || String(error),
+      stack: error.stack || null,
+    });
+    bootLog("ensureDatabaseSchema failed", error);
+  }
 }
 
 async function bootstrap() {
@@ -262,3 +274,17 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+process.on("SIGTERM", async () => {
+  try {
+    await prisma?.$disconnect();
+  } catch {}
+  process.exit(0);
+});
+
+process.on("SIGINT", async () => {
+  try {
+    await prisma?.$disconnect();
+  } catch {}
+  process.exit(0);
+});
