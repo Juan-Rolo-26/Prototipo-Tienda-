@@ -3,9 +3,10 @@
   width: 100vw;
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
-  margin-bottom: -74px;
-  min-height: 198px;
-  height: clamp(198px, 30vw, 320px);
+  margin-top: -1px;
+  margin-bottom: -58px;
+  min-height: 230px;
+  height: clamp(230px, 34vw, 360px);
   border-radius: 0;
   overflow: hidden;
   background: #d3c8b1;
@@ -18,8 +19,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: clamp(80px, 18vw, 150px);
-  background: linear-gradient(to bottom, rgba(242, 242, 242, 0) 0%, #f2f2f2 90%);
+  height: clamp(56px, 12vw, 110px);
+  background: linear-gradient(
+    to bottom,
+    rgba(242, 242, 242, 0) 0%,
+    rgba(242, 242, 242, 0) 48%,
+    rgba(242, 242, 242, 0.45) 76%,
+    #f2f2f2 100%
+  );
   pointer-events: none;
   z-index: 2;
 }
@@ -47,6 +54,7 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 58%;
   display: block;
 }
 
@@ -102,9 +110,9 @@
 
 @media (max-width: 920px) {
   .hero-carousel {
-    min-height: 170px;
-    height: clamp(170px, 48vw, 260px);
-    margin-bottom: -44px;
+    min-height: 200px;
+    height: clamp(200px, 56vw, 290px);
+    margin-bottom: -34px;
   }
 
   .hero-carousel-arrow {
