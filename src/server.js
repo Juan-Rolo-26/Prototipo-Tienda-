@@ -10,20 +10,6 @@ const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
-
-const authRoutes = require("./routes/auth");
-const productRoutes = require("./routes/products");
-const orderRoutes = require("./routes/orders");
-const customerRoutes = require("./routes/customers");
-const paymentRoutes = require("./routes/payments");
-const webhookRoutes = require("./routes/webhooks");
-const { ensureAdmins } = require("./utils/ensureAdmins");
-
-const app = express();
-const prisma = new PrismaClient();
-const PORT = process.env.PORT || 3000;
-const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
-const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
 const BOOT_LOG_FILE = path.join(__dirname, "..", "tmp", "tienda-boot.log");
 
 function bootLog(message, error) {
@@ -37,6 +23,31 @@ function bootLog(message, error) {
   }
 }
 
+bootLog("server.js loaded (pre-routes)");
+
+function requireOrCrash(modulePath) {
+  try {
+    bootLog(`loading module ${modulePath}`);
+    return require(modulePath);
+  } catch (error) {
+    bootLog(`failed loading module ${modulePath}`, error);
+    throw error;
+  }
+}
+
+const authRoutes = requireOrCrash("./routes/auth");
+const productRoutes = requireOrCrash("./routes/products");
+const orderRoutes = requireOrCrash("./routes/orders");
+const customerRoutes = requireOrCrash("./routes/customers");
+const paymentRoutes = requireOrCrash("./routes/payments");
+const webhookRoutes = requireOrCrash("./routes/webhooks");
+const { ensureAdmins } = requireOrCrash("./utils/ensureAdmins");
+
+const app = express();
+const prisma = new PrismaClient();
+const PORT = process.env.PORT || 3000;
+const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
+const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
 bootLog("Server file loaded");
 bootLog(`NODE_ENV=${process.env.NODE_ENV || "undefined"} PORT=${process.env.PORT || "undefined"}`);
 process.on("uncaughtException", (error) => bootLog("uncaughtException", error));
