@@ -1,13 +1,27 @@
 .hero-carousel {
   position: relative;
-  width: 100%;
-  margin-bottom: 18px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  margin-bottom: -74px;
   min-height: 198px;
   height: clamp(198px, 30vw, 320px);
-  border-radius: 14px;
+  border-radius: 0;
   overflow: hidden;
-  border: 1px solid #d6d0c4;
   background: #d3c8b1;
+  z-index: 1;
+}
+
+.hero-carousel::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: clamp(80px, 18vw, 150px);
+  background: linear-gradient(to bottom, rgba(242, 242, 242, 0) 0%, #f2f2f2 90%);
+  pointer-events: none;
+  z-index: 2;
 }
 
 .hero-carousel-track {
@@ -66,7 +80,7 @@
 .hero-carousel-dots {
   position: absolute;
   left: 50%;
-  bottom: 12px;
+  bottom: 30px;
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
@@ -90,12 +104,16 @@
   .hero-carousel {
     min-height: 170px;
     height: clamp(170px, 48vw, 260px);
-    border-radius: 12px;
+    margin-bottom: -44px;
   }
 
   .hero-carousel-arrow {
     width: 36px;
     height: 36px;
     font-size: 27px;
+  }
+
+  .hero-carousel-dots {
+    bottom: 20px;
   }
 }

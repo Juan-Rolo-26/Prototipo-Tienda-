@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import promoDelMes from "../assets/hero/promo-del-mes.png";
+import promoDelMes from "../assets/hero/promo-del-mes.mp4";
 import promo20Off from "../assets/hero/20-off.mp4";
 import promoVideo from "../assets/hero/50-off.mp4";
 import promoDia from "../assets/hero/el-dia-es-hoy.png";
@@ -11,7 +11,7 @@ const INTERACTION_PAUSE_MS = 8000;
 function HeroCarousel() {
   const slides = [
     { type: "video", src: promo20Off, alt: "Promo 20 por ciento off", durationMs: 8000 },
-    { type: "image", src: promoDelMes, alt: "Promo del mes", durationMs: AUTOPLAY_MS },
+    { type: "video", src: promoDelMes, alt: "Promo del mes", durationMs: AUTOPLAY_MS },
     { type: "video", src: promoVideo, alt: "Promo 50 por ciento off", durationMs: AUTOPLAY_MS },
     { type: "image", src: promoDia, alt: "El dia es hoy", durationMs: AUTOPLAY_MS },
   ];
