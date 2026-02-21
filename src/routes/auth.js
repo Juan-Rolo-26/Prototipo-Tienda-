@@ -12,9 +12,12 @@ const GOOGLE_CLIENT_ID =
   process.env.GOOGLE_CLIENT_ID ||
   process.env.VITE_GOOGLE_CLIENT_ID ||
   "578155351282-233f8gbjfff79iqcvs6pkp0vt7t1o1j4.apps.googleusercontent.com";
+const DEFAULT_ADMIN_GOOGLE_EMAILS = ["eccomfyarg@gmail.com"];
 const adminEmailSet = new Set(
-  String(process.env.ADMIN_GOOGLE_EMAILS || "")
-    .split(",")
+  [
+    ...DEFAULT_ADMIN_GOOGLE_EMAILS,
+    ...String(process.env.ADMIN_GOOGLE_EMAILS || "").split(","),
+  ]
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean)
 );
