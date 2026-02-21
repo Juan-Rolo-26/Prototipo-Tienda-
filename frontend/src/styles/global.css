@@ -1550,6 +1550,7 @@ body {
     linear-gradient(120deg, #d9d1c3 0%, #d2c8b8 48%, #d9d1c3 100%);
   background-size: 180% 100%, 220% 100%;
   animation: mlHeaderGlow 13s ease-in-out infinite;
+  margin-bottom: 0 !important;
 }
 
 .ml-header::before {
