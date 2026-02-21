@@ -24,7 +24,7 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
 const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
-const BOOT_LOG_FILE = "/tmp/tienda-boot.log";
+const BOOT_LOG_FILE = path.join(__dirname, "..", "tmp", "tienda-boot.log");
 
 function bootLog(message, error) {
   const line = `[${new Date().toISOString()}] ${message}${
