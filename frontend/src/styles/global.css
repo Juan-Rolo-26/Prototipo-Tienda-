@@ -525,7 +525,7 @@ button {
 .home-grid {
   position: relative;
   z-index: 4;
-  margin-top: -58px;
+  margin-top: 12px;
   padding-bottom: 8px;
 }
 
@@ -772,7 +772,7 @@ button {
   }
 
   .home-grid {
-    margin-top: -30px;
+    margin-top: 10px;
     padding-bottom: 8px;
   }
 
