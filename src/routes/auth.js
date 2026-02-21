@@ -4,6 +4,7 @@ const jwt = require("jsonwebtoken");
 const { OAuth2Client } = require("google-auth-library");
 const { PrismaClient } = require("@prisma/client");
 const { requireCustomer } = require("../middleware/auth");
+const { JWT_SECRET } = require("../config/jwt");
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -36,7 +37,7 @@ router.post("/login", async (req, res) => {
 
   const token = jwt.sign(
     { id: admin.id, username: admin.username, role: "admin" },
-    process.env.JWT_SECRET,
+    JWT_SECRET,
     { expiresIn: "8h" }
   );
 
@@ -80,7 +81,7 @@ router.post("/google", async (req, res) => {
 
     const token = jwt.sign(
       { id: customer.id, email: customer.email, role: "customer" },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "7d" }
     );
 
@@ -124,7 +125,7 @@ router.post("/google-admin", async (req, res) => {
 
     const token = jwt.sign(
       { id: email, email, role: "admin" },
-      process.env.JWT_SECRET,
+      JWT_SECRET,
       { expiresIn: "8h" }
     );
 

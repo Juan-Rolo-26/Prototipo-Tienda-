@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = require("../config/jwt");
 
 function requireAdmin(req, res, next) {
   const header = req.headers.authorization || "";
@@ -9,7 +10,7 @@ function requireAdmin(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== "admin") {
       return res.status(403).json({ error: "Forbidden" });
     }
@@ -27,7 +28,7 @@ function optionalCustomer(req, res, next) {
     return next();
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role === "customer") {
       req.customer = decoded;
     }
@@ -44,7 +45,7 @@ function requireCustomer(req, res, next) {
     return res.status(401).json({ error: "Missing token" });
   }
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.role !== "customer") {
       return res.status(403).json({ error: "Forbidden" });
     }
