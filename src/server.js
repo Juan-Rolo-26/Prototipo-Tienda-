@@ -6,6 +6,7 @@ console.log("BOOT ENV GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
 console.log("NODE_ENV:", process.env.NODE_ENV);
 
 const path = require("path");
+const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
 const { PrismaClient } = require("@prisma/client");
@@ -22,10 +23,13 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
+const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
+
+fs.mkdirSync(UPLOADS_DIR, { recursive: true });
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
-app.use("/uploads", express.static(path.join(__dirname, "..", "uploads")));
+app.use("/uploads", express.static(UPLOADS_DIR));
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });
@@ -38,7 +42,7 @@ app.use("/api/customers", customerRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/webhooks", webhookRoutes);
 
-if (require("fs").existsSync(FRONTEND_DIST)) {
+if (fs.existsSync(FRONTEND_DIST)) {
   app.use(express.static(FRONTEND_DIST));
   app.get(/^\/(?!api|uploads).*/, (_req, res) => {
     res.sendFile(path.join(FRONTEND_DIST, "index.html"));
@@ -170,17 +174,15 @@ async function ensureDatabaseSchema() {
 }
 
 async function bootstrap() {
-  try {
-    await ensureDatabaseSchema();
-    await ensureAdmins();
-
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error("Startup failed", error);
-    process.exit(1);
-  }
+  app.listen(PORT, async () => {
+    console.log(`Server running on port ${PORT}`);
+    try {
+      await ensureDatabaseSchema();
+      await ensureAdmins();
+    } catch (error) {
+      console.error("Post-start initialization failed", error);
+    }
+  });
 }
 
 bootstrap();
