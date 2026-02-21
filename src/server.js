@@ -9,7 +9,6 @@ const path = require("path");
 const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
-const { PrismaClient } = require("@prisma/client");
 const BOOT_LOG_FILE = path.join(__dirname, "..", "tmp", "tienda-boot.log");
 
 function bootLog(message, error) {
@@ -59,7 +58,19 @@ const ensureAdminsModule = safeRequire("./utils/ensureAdmins");
 const ensureAdmins = ensureAdminsModule?.ensureAdmins;
 
 const app = express();
-const prisma = new PrismaClient();
+let prisma = null;
+try {
+  const { PrismaClient } = require("@prisma/client");
+  prisma = new PrismaClient();
+  bootLog("PrismaClient loaded");
+} catch (error) {
+  startupErrors.push({
+    module: "@prisma/client",
+    message: error.message || String(error),
+    stack: error.stack || null,
+  });
+  bootLog("PrismaClient load failed", error);
+}
 const PORT = process.env.PORT || 3000;
 const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
 const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
@@ -99,6 +110,9 @@ if (fs.existsSync(FRONTEND_DIST)) {
 }
 
 async function ensureDatabaseSchema() {
+  if (!prisma) {
+    throw new Error("Prisma client unavailable");
+  }
   await prisma.$connect();
   await prisma.$executeRaw`PRAGMA foreign_keys = ON;`;
 
