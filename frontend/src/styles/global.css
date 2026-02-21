@@ -522,6 +522,13 @@ button {
   width: 100%;
 }
 
+.home-grid {
+  position: relative;
+  z-index: 4;
+  margin-top: -58px;
+  padding-bottom: 8px;
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);
@@ -762,6 +769,11 @@ button {
 @media (max-width: 720px) {
   .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-grid {
+    margin-top: -30px;
+    padding-bottom: 8px;
   }
 
   .header {

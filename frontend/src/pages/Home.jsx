@@ -97,7 +97,7 @@ function Home({ onAdd, searchQuery, cart, isAdmin }) {
         <p className="helper">La tienda esta vacia por ahora. Vuelve en unos dias.</p>
       )}
 
-      <div className="grid">
+      <div className="grid home-grid">
         {filteredProducts.map((product) => {
           const inCart = cart?.find((item) => item.productId === product.id);
           return (

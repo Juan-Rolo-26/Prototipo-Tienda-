@@ -4,7 +4,7 @@
   margin-left: calc(50% - 50vw);
   margin-right: calc(50% - 50vw);
   margin-top: -1px;
-  margin-bottom: -58px;
+  margin-bottom: 0;
   min-height: 230px;
   height: clamp(230px, 34vw, 360px);
   border-radius: 0;
@@ -19,13 +19,13 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: clamp(56px, 12vw, 110px);
+  height: clamp(64px, 11vw, 118px);
   background: linear-gradient(
     to bottom,
     rgba(242, 242, 242, 0) 0%,
-    rgba(242, 242, 242, 0) 48%,
-    rgba(242, 242, 242, 0.45) 76%,
-    #f2f2f2 100%
+    rgba(242, 242, 242, 0.08) 42%,
+    rgba(242, 242, 242, 0.34) 70%,
+    rgba(242, 242, 242, 0.82) 100%
   );
   pointer-events: none;
   z-index: 2;
@@ -112,7 +112,7 @@
   .hero-carousel {
     min-height: 200px;
     height: clamp(200px, 56vw, 290px);
-    margin-bottom: -34px;
+    margin-bottom: 0;
   }
 
   .hero-carousel-arrow {
