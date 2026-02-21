@@ -10,6 +10,10 @@ const fs = require("fs");
 const express = require("express");
 const cors = require("cors");
 const BOOT_LOG_FILE = path.join(__dirname, "..", "tmp", "tienda-boot.log");
+const DATA_DIR = path.join(__dirname, "..", "data");
+try {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+} catch {}
 
 function bootLog(message, error) {
   const line = `[${new Date().toISOString()}] ${message}${
