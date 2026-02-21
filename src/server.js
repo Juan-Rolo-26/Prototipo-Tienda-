@@ -24,11 +24,30 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 3000;
 const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
 const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
+const BOOT_LOG_FILE = path.join(__dirname, "..", "boot.log");
+
+function bootLog(message, error) {
+  const line = `[${new Date().toISOString()}] ${message}${
+    error ? ` | ${error.stack || error.message || String(error)}` : ""
+  }\n`;
+  try {
+    fs.appendFileSync(BOOT_LOG_FILE, line);
+  } catch (_err) {
+    // Avoid crashing while logging.
+  }
+}
+
+bootLog("Server file loaded");
+bootLog(`NODE_ENV=${process.env.NODE_ENV || "undefined"} PORT=${process.env.PORT || "undefined"}`);
+process.on("uncaughtException", (error) => bootLog("uncaughtException", error));
+process.on("unhandledRejection", (reason) => bootLog("unhandledRejection", reason));
 
 try {
   fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+  bootLog(`Uploads directory ready: ${UPLOADS_DIR}`);
 } catch (error) {
   console.error("Could not initialize uploads directory:", error);
+  bootLog("Could not initialize uploads directory", error);
 }
 
 app.use(cors());
@@ -178,13 +197,18 @@ async function ensureDatabaseSchema() {
 }
 
 async function bootstrap() {
+  bootLog("bootstrap called");
   app.listen(PORT, async () => {
     console.log(`Server running on port ${PORT}`);
+    bootLog(`Server running on port ${PORT}`);
     try {
       await ensureDatabaseSchema();
+      bootLog("ensureDatabaseSchema completed");
       await ensureAdmins();
+      bootLog("ensureAdmins completed");
     } catch (error) {
       console.error("Post-start initialization failed", error);
+      bootLog("Post-start initialization failed", error);
     }
   });
 }
