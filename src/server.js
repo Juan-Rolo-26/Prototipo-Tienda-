@@ -35,13 +35,28 @@ function requireOrCrash(modulePath) {
   }
 }
 
-const authRoutes = requireOrCrash("./routes/auth");
-const productRoutes = requireOrCrash("./routes/products");
-const orderRoutes = requireOrCrash("./routes/orders");
-const customerRoutes = requireOrCrash("./routes/customers");
-const paymentRoutes = requireOrCrash("./routes/payments");
-const webhookRoutes = requireOrCrash("./routes/webhooks");
-const { ensureAdmins } = requireOrCrash("./utils/ensureAdmins");
+const startupErrors = [];
+function safeRequire(modulePath) {
+  try {
+    return requireOrCrash(modulePath);
+  } catch (error) {
+    startupErrors.push({
+      module: modulePath,
+      message: error.message || String(error),
+      stack: error.stack || null,
+    });
+    return null;
+  }
+}
+
+const authRoutes = safeRequire("./routes/auth");
+const productRoutes = safeRequire("./routes/products");
+const orderRoutes = safeRequire("./routes/orders");
+const customerRoutes = safeRequire("./routes/customers");
+const paymentRoutes = safeRequire("./routes/payments");
+const webhookRoutes = safeRequire("./routes/webhooks");
+const ensureAdminsModule = safeRequire("./utils/ensureAdmins");
+const ensureAdmins = ensureAdminsModule?.ensureAdmins;
 
 const app = express();
 const prisma = new PrismaClient();
@@ -66,15 +81,15 @@ app.use(express.json({ limit: "2mb" }));
 app.use("/uploads", express.static(UPLOADS_DIR));
 
 app.get("/api/health", (req, res) => {
-  res.json({ ok: true });
+  res.json({ ok: startupErrors.length === 0, startupErrors });
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/customers", customerRoutes);
-app.use("/api/payments", paymentRoutes);
-app.use("/api/webhooks", webhookRoutes);
+if (authRoutes) app.use("/api/auth", authRoutes);
+if (productRoutes) app.use("/api/products", productRoutes);
+if (orderRoutes) app.use("/api/orders", orderRoutes);
+if (customerRoutes) app.use("/api/customers", customerRoutes);
+if (paymentRoutes) app.use("/api/payments", paymentRoutes);
+if (webhookRoutes) app.use("/api/webhooks", webhookRoutes);
 
 if (fs.existsSync(FRONTEND_DIST)) {
   app.use(express.static(FRONTEND_DIST));
@@ -215,8 +230,12 @@ async function bootstrap() {
     try {
       await ensureDatabaseSchema();
       bootLog("ensureDatabaseSchema completed");
-      await ensureAdmins();
-      bootLog("ensureAdmins completed");
+      if (typeof ensureAdmins === "function") {
+        await ensureAdmins();
+        bootLog("ensureAdmins completed");
+      } else {
+        bootLog("ensureAdmins module unavailable");
+      }
     } catch (error) {
       console.error("Post-start initialization failed", error);
       bootLog("Post-start initialization failed", error);
