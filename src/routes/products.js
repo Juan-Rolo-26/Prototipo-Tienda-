@@ -10,7 +10,13 @@ const router = express.Router();
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, path.join(__dirname, "..", "..", "uploads"));
+    const uploadsDir = path.join(__dirname, "..", "..", "uploads");
+    try {
+      require("fs").mkdirSync(uploadsDir, { recursive: true });
+      cb(null, uploadsDir);
+    } catch (error) {
+      cb(error);
+    }
   },
   filename: (req, file, cb) => {
     const safeName = file.originalname.replace(/\s+/g, "-").toLowerCase();

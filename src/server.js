@@ -25,7 +25,11 @@ const PORT = process.env.PORT || 3000;
 const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
 const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
 
-fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+try {
+  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
+} catch (error) {
+  console.error("Could not initialize uploads directory:", error);
+}
 
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
