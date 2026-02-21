@@ -1557,9 +1557,17 @@ body {
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.12) 45%, transparent 100%);
+  background: linear-gradient(
+    95deg,
+    rgba(255, 255, 255, 0) 28%,
+    rgba(255, 255, 255, 0.18) 40%,
+    rgba(242, 219, 159, 0.52) 48%,
+    rgba(255, 247, 213, 0.72) 52%,
+    rgba(242, 219, 159, 0.4) 58%,
+    rgba(255, 255, 255, 0) 72%
+  );
   transform: translateX(-120%);
-  animation: mlHeaderShine 12s ease-in-out infinite;
+  animation: mlHeaderShine 9.5s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -1622,13 +1630,21 @@ body {
 }
 
 @keyframes mlHeaderShine {
-  0%, 78%, 100% {
+  0%, 72%, 100% {
     transform: translateX(-120%);
     opacity: 0;
   }
-  28%, 52% {
+  18% {
+    transform: translateX(-55%);
+    opacity: 0.82;
+  }
+  34% {
     transform: translateX(120%);
-    opacity: 0.85;
+    opacity: 0.98;
+  }
+  46% {
+    transform: translateX(55%);
+    opacity: 0.72;
   }
 }
 
