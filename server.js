@@ -20,6 +20,7 @@ function startFallback(error) {
     res.status(500).send("App bootstrap failed. Check /api/health for details.");
   });
 
+  // IMPORTANT: Hostinger requires binding to 0.0.0.0 to avoid 503 from proxy
   app.listen(port, "0.0.0.0", () => {
     console.error("Fallback server running on port", port);
     console.error(error);

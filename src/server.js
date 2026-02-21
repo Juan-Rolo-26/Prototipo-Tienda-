@@ -254,6 +254,7 @@ async function ensureDatabaseSchema() {
 
 async function bootstrap() {
   bootLog("bootstrap called");
+  // IMPORTANT: Hostinger requires binding to 0.0.0.0 to avoid 503 from proxy
   app.listen(PORT, "0.0.0.0", async () => {
     console.log(`Server running on port ${PORT}`);
     bootLog(`Server running on port ${PORT}`);
