@@ -1,12 +1,17 @@
-const http = require("http");
+const express = require("express");
 
-const server = http.createServer((req, res) => {
-  res.writeHead(200, { "Content-Type": "text/plain" });
-  res.end("BOOT OK");
+const app = express();
+
+app.get("/api/health", (req, res) => {
+  res.json({ ok: true });
+});
+
+app.get("/", (req, res) => {
+  res.send("EXPRESS OK");
 });
 
 const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log("BOOT OK RUNNING");
+app.listen(PORT, "0.0.0.0", () => {
+  console.log("Express server running");
 });
