@@ -7,6 +7,24 @@ app.get("/api/health", (req, res) => {
   res.json({ ok: true });
 });
 
+app.get("/debug-files", (req, res) => {
+  const fs = require("fs");
+  const path = require("path");
+
+  const base = path.join(__dirname, "frontend");
+  const dist = path.join(__dirname, "frontend", "dist");
+
+  const existsBase = fs.existsSync(base);
+  const existsDist = fs.existsSync(dist);
+  const existsIndex = fs.existsSync(path.join(dist, "index.html"));
+
+  res.json({
+    frontend_exists: existsBase,
+    dist_exists: existsDist,
+    dist_index_exists: existsIndex
+  });
+});
+
 const FRONTEND_DIST = path.join(__dirname, "frontend", "dist");
 
 app.use(express.static(FRONTEND_DIST));
