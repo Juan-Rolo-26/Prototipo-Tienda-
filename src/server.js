@@ -1,3 +1,11 @@
+process.on("uncaughtException", (err) => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("UNHANDLED REJECTION:", reason);
+});
+
 console.log("🔥🔥🔥 SERVER BOOT VERSION 2026-02-19 🔥🔥🔥");
 if (process.env.NODE_ENV !== "production") {
   require("dotenv").config();
@@ -274,7 +282,11 @@ async function bootstrap() {
   });
 }
 
-bootstrap();
+try {
+  bootstrap();
+} catch (err) {
+  console.error("BOOTSTRAP FAILED:", err);
+}
 
 process.on("SIGTERM", async () => {
   try {
