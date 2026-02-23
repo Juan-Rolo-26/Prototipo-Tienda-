@@ -1,3 +1,5 @@
+console.log("ENV GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
