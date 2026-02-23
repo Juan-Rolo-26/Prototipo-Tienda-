@@ -1,11 +1,10 @@
 const express = require("express");
 const path = require("path");
 const multer = require("multer");
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../lib/prisma");
 const { requireAdmin } = require("../middleware/auth");
 const { parsePriceToCents, formatCentsToNumber } = require("../utils/pricing");
 
-const prisma = new PrismaClient();
 const router = express.Router();
 
 const storage = multer.diskStorage({

@@ -1,5 +1,5 @@
 const express = require("express");
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../lib/prisma");
 const { applyPaidOrder } = require("../services/orderService");
 const {
   getPaymentById,
@@ -8,7 +8,6 @@ const {
 } = require("../services/mercadoPago");
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 router.post("/mercadopago", async (req, res) => {
   try {

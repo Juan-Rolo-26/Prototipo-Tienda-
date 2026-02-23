@@ -1,5 +1,5 @@
 const express = require("express");
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../lib/prisma");
 const { optionalCustomer } = require("../middleware/auth");
 const { createPendingOrder, applyPaidOrder } = require("../services/orderService");
 const {
@@ -9,7 +9,6 @@ const {
 const { formatCentsToNumber, parsePriceToCents } = require("../utils/pricing");
 
 const router = express.Router();
-const prisma = new PrismaClient();
 
 function serializeSavedMethod(method) {
   return {

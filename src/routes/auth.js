@@ -3,12 +3,11 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
-const { PrismaClient } = require("@prisma/client");
+const prisma = require("../lib/prisma");
 const { requireCustomer } = require("../middleware/auth");
 const { JWT_SECRET } = require("../config/jwt");
 
 const router = express.Router();
-const prisma = new PrismaClient();
 const RESET_CODE_TTL_MS = 10 * 60 * 1000;
 const forgotPasswordRate = new Map();
 
