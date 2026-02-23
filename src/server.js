@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
+
 const testRoutes = require("./routes/test");
 
 const app = express();
@@ -13,14 +15,20 @@ app.get("/api/health", (req, res) => {
 
 app.use("/api/test", testRoutes);
 
-const path = require("path");
-
+// ===== SERVIR FRONTEND =====
 const FRONTEND_DIST = path.join(__dirname, "..", "frontend", "dist");
 
 app.use(express.static(FRONTEND_DIST));
 
 app.get(/^\/(?!api).*/, (req, res) => {
   res.sendFile(path.join(FRONTEND_DIST, "index.html"));
+});
+
+// ===== LISTEN =====
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = app;
