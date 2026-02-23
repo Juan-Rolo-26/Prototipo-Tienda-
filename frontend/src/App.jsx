@@ -11,8 +11,7 @@ import PurchasesPage from "./pages/PurchasesPage";
 import logo from "./assets/logo.png";
 import routeLoaderAnimation from "./assets/route-loader.json";
 import AuthModal from "./components/AuthModal";
-import { fetchAdminStatus, fetchCustomer, loginWithGoogle } from "./api";
-const CUSTOMER_PICTURE_KEY = "customerPicture";
+import { fetchCustomer } from "./api";
 function formatLocation(profile) {
   if (!profile?.address1) return "Agregar ubicacion";
   const line = [profile.address1, profile.city, profile.province].filter(Boolean).join(" · ");
@@ -22,11 +21,12 @@ function formatLocation(profile) {
 function App() {
   const [cart, setCart] = useState([]);
   const [adminToken, setAdminToken] = useState(() => localStorage.getItem("adminToken"));
-  const [customerToken, setCustomerToken] = useState(() => localStorage.getItem("customerToken"));
+  const [customerToken, setCustomerToken] = useState(
+    () => localStorage.getItem("auth_token") || localStorage.getItem("customerToken")
+  );
   const [customerProfile, setCustomerProfile] = useState(null);
   const [customerIsAdmin, setCustomerIsAdmin] = useState(() => localStorage.getItem("customerIsAdmin") === "true");
   const [authOpen, setAuthOpen] = useState(false);
-  const [authLoading, setAuthLoading] = useState(false);
   const [authToast, setAuthToast] = useState(null);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,27 +71,21 @@ function App() {
   React.useEffect(() => {
     if (!customerToken) {
       setCustomerProfile(null);
+      setCustomerIsAdmin(Boolean(adminToken));
       return;
     }
     fetchCustomer(customerToken)
       .then((data) => {
-        const picture = localStorage.getItem(CUSTOMER_PICTURE_KEY);
-        setCustomerProfile(picture ? { ...data.customer, googlePicture: picture } : data.customer);
+        setCustomerProfile(data.customer);
       })
       .catch(() => {
+        localStorage.removeItem("auth_token");
         localStorage.removeItem("customerToken");
         setCustomerToken(null);
       });
-    fetchAdminStatus(customerToken)
-      .then((data) => {
-        setCustomerIsAdmin(Boolean(data.isAdmin));
-        localStorage.setItem("customerIsAdmin", data.isAdmin ? "true" : "false");
-      })
-      .catch(() => {
-        setCustomerIsAdmin(false);
-        localStorage.setItem("customerIsAdmin", "false");
-      });
-  }, [customerToken]);
+    setCustomerIsAdmin(Boolean(adminToken));
+    localStorage.setItem("customerIsAdmin", adminToken ? "true" : "false");
+  }, [customerToken, adminToken]);
 
   const lotCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
@@ -180,34 +174,19 @@ function App() {
     setAdminToken(null);
   };
 
-  const handleCustomerLogin = async (credential) => {
-    try {
-      setAuthLoading(true);
-      const data = await loginWithGoogle(credential);
-      localStorage.setItem("customerToken", data.token);
-      localStorage.setItem("customerIsAdmin", data.isAdmin ? "true" : "false");
-      if (data.customer?.googlePicture) {
-        localStorage.setItem(CUSTOMER_PICTURE_KEY, data.customer.googlePicture);
-      }
-      setCustomerToken(data.token);
-      setCustomerProfile(data.customer);
-      setCustomerIsAdmin(Boolean(data.isAdmin));
-      setAuthToast(data.isNew ? "Registro exitoso" : "Inicio de sesion exitoso");
-      setTimeout(() => setAuthToast(null), 2500);
-      setAuthOpen(false);
-    } catch (error) {
-      console.error(error);
-      setAuthToast(error.message || "No se pudo iniciar sesion con Google");
-      setTimeout(() => setAuthToast(null), 3200);
-    } finally {
-      setAuthLoading(false);
-    }
+  const handleCustomerAuthSuccess = (data, message) => {
+    localStorage.setItem("auth_token", data.token);
+    localStorage.setItem("customerToken", data.token);
+    setCustomerToken(data.token);
+    setCustomerProfile(data.user || null);
+    setAuthToast(message || "Inicio de sesion exitoso");
+    setTimeout(() => setAuthToast(null), 2500);
   };
 
   const handleCustomerLogout = () => {
+    localStorage.removeItem("auth_token");
     localStorage.removeItem("customerToken");
     localStorage.removeItem("customerIsAdmin");
-    localStorage.removeItem(CUSTOMER_PICTURE_KEY);
     setCustomerToken(null);
     setCustomerProfile(null);
     setCustomerIsAdmin(false);
@@ -358,14 +337,10 @@ function App() {
             )}
           </div>
           <button className="ml-icon-link" type="button" aria-label="Usuario" onClick={() => setAuthOpen(true)}>
-            {customerProfile?.googlePicture ? (
-              <img className="ml-user-avatar" src={customerProfile.googlePicture} alt="Perfil" />
-            ) : (
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
-                <path d="M4 20c1.6-3 4.3-4.5 8-4.5s6.4 1.5 8 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-              </svg>
-            )}
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
+              <path d="M4 20c1.6-3 4.3-4.5 8-4.5s6.4 1.5 8 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+            </svg>
           </button>
         </nav>
       </header>
@@ -419,8 +394,7 @@ function App() {
       <AuthModal
         open={authOpen}
         onClose={() => setAuthOpen(false)}
-        onGoogleCredential={handleCustomerLogin}
-        loading={authLoading}
+        onAuthSuccess={handleCustomerAuthSuccess}
         customerProfile={customerProfile}
         customerIsAdmin={customerIsAdmin}
         onLogout={handleCustomerLogout}

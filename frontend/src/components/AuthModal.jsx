@@ -1,61 +1,110 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import {
+  forgotPassword,
+  loginCustomer,
+  registerCustomer,
+  verifyResetCode,
+} from "../api";
 
-function AuthModal({ open, onClose, onGoogleCredential, loading, customerProfile, customerIsAdmin, onLogout }) {
-  const googleContainerRef = useRef(null);
-  const [googleError, setGoogleError] = useState(null);
+function AuthModal({ open, onClose, onAuthSuccess, customerProfile, customerIsAdmin, onLogout }) {
+  const [tab, setTab] = useState("login");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  useEffect(() => {
-    if (!open || customerProfile) return;
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      setGoogleError("Falta VITE_GOOGLE_CLIENT_ID en frontend/.env");
-      return;
+  const [registerForm, setRegisterForm] = useState({
+    email: "",
+    username: "",
+    password: "",
+  });
+
+  const [loginForm, setLoginForm] = useState({
+    username: "",
+    password: "",
+  });
+
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotCode, setForgotCode] = useState("");
+  const [forgotEmailSent, setForgotEmailSent] = useState(false);
+
+  const displayName = useMemo(() => {
+    if (!customerProfile) return "";
+    return customerProfile.firstName || customerProfile.username || customerProfile.email?.split("@")[0] || "";
+  }, [customerProfile]);
+
+  const resetForgotState = () => {
+    setForgotCode("");
+    setForgotEmailSent(false);
+  };
+
+  const switchTab = (nextTab) => {
+    setError("");
+    setTab(nextTab);
+    if (nextTab !== "forgot") {
+      resetForgotState();
     }
-    setGoogleError(null);
+  };
 
-    let cancelled = false;
-    let tries = 0;
+  const handleRegister = async (event) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const data = await registerCustomer(registerForm);
+      onAuthSuccess(data, "Registro exitoso");
+      onClose();
+    } catch (err) {
+      setError(err.message || "No se pudo registrar");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    const tryRender = () => {
-      if (cancelled) return;
-      if (!window.google || !googleContainerRef.current) {
-        tries += 1;
-        if (tries <= 25) {
-          setTimeout(tryRender, 120);
-        } else {
-          setGoogleError("No se pudo cargar Google Sign-In");
-        }
-        return;
-      }
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const data = await loginCustomer(loginForm);
+      onAuthSuccess(data, "Inicio de sesion exitoso");
+      onClose();
+    } catch (err) {
+      setError(err.message || "No se pudo iniciar sesion");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      window.google.accounts.id.initialize({
-        client_id: clientId,
-        callback: (response) => {
-          onGoogleCredential(response.credential);
-        },
-      });
+  const handleForgotEmail = async (event) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      await forgotPassword({ email: forgotEmail });
+      setForgotEmailSent(true);
+    } catch (err) {
+      setError(err.message || "No se pudo enviar el codigo");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      googleContainerRef.current.innerHTML = "";
-      window.google.accounts.id.renderButton(googleContainerRef.current, {
-        theme: "outline",
-        size: "large",
-        width: 280,
-        text: "continue_with",
-      });
-    };
-
-    tryRender();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [open, customerProfile, onGoogleCredential]);
+  const handleForgotVerify = async (event) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const data = await verifyResetCode({ email: forgotEmail, code: forgotCode });
+      onAuthSuccess(data, "Inicio de sesion exitoso");
+      onClose();
+    } catch (err) {
+      setError(err.message || "Codigo invalido o vencido");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   if (!open) return null;
-
-  const email = customerProfile?.email || "";
-  const displayName = email ? email.split("@")[0] : "";
 
   return (
     <div className="modal-backdrop" onClick={onClose}>
@@ -63,11 +112,13 @@ function AuthModal({ open, onClose, onGoogleCredential, loading, customerProfile
         <button className="modal-close" type="button" onClick={onClose} aria-label="Cerrar">
           ✕
         </button>
+
         {customerProfile ? (
           <div className="profile-view">
             <h2>Hola {displayName}</h2>
             <div className="profile-list">
               <div><strong>Email:</strong> {customerProfile.email}</div>
+              <div><strong>Usuario:</strong> {customerProfile.username || customerProfile.firstName || ""}</div>
               <div><strong>Nombre:</strong> {customerProfile.firstName || ""}</div>
               <div><strong>Apellido:</strong> {customerProfile.lastName || ""}</div>
               <div><strong>Provincia:</strong> {customerProfile.province || ""}</div>
@@ -95,13 +146,118 @@ function AuthModal({ open, onClose, onGoogleCredential, loading, customerProfile
           </div>
         ) : (
           <>
-            <h2>Inicia sesion o registrate</h2>
-            <p className="helper">
-              Accede con tu cuenta de Google. Comprar no es obligatorio para iniciar sesion.
-            </p>
-            <div ref={googleContainerRef} className="google-button" />
-            {googleError && <p className="helper">{googleError}</p>}
-            {loading && <p className="helper">Conectando con Google...</p>}
+            <h2>Tu cuenta</h2>
+
+            <div className="auth-tabs">
+              <button
+                type="button"
+                className={`button secondary ${tab === "register" ? "active" : ""}`}
+                onClick={() => switchTab("register")}
+              >
+                Registrarse
+              </button>
+              <button
+                type="button"
+                className={`button secondary ${tab === "login" ? "active" : ""}`}
+                onClick={() => switchTab("login")}
+              >
+                Iniciar sesion
+              </button>
+            </div>
+
+            {tab === "register" && (
+              <form className="auth-form" onSubmit={handleRegister}>
+                <input
+                  type="email"
+                  placeholder="Email"
+                  value={registerForm.email}
+                  onChange={(event) => setRegisterForm((prev) => ({ ...prev, email: event.target.value }))}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="Nombre de usuario"
+                  value={registerForm.username}
+                  onChange={(event) => setRegisterForm((prev) => ({ ...prev, username: event.target.value }))}
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="Contrasena (minimo 8)"
+                  value={registerForm.password}
+                  onChange={(event) => setRegisterForm((prev) => ({ ...prev, password: event.target.value }))}
+                  minLength={8}
+                  required
+                />
+                <button className="button" type="submit" disabled={loading}>
+                  {loading ? "Procesando..." : "Registrarse"}
+                </button>
+              </form>
+            )}
+
+            {tab === "login" && (
+              <form className="auth-form" onSubmit={handleLogin}>
+                <input
+                  type="text"
+                  placeholder="Nombre de usuario"
+                  value={loginForm.username}
+                  onChange={(event) => setLoginForm((prev) => ({ ...prev, username: event.target.value }))}
+                  required
+                />
+                <input
+                  type="password"
+                  placeholder="Contrasena"
+                  value={loginForm.password}
+                  onChange={(event) => setLoginForm((prev) => ({ ...prev, password: event.target.value }))}
+                  required
+                />
+                <button className="button" type="submit" disabled={loading}>
+                  {loading ? "Procesando..." : "Iniciar sesion"}
+                </button>
+                <button className="auth-link" type="button" onClick={() => switchTab("forgot")}>
+                  Olvide mi contrasena
+                </button>
+              </form>
+            )}
+
+            {tab === "forgot" && (
+              <>
+                {!forgotEmailSent ? (
+                  <form className="auth-form" onSubmit={handleForgotEmail}>
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      value={forgotEmail}
+                      onChange={(event) => setForgotEmail(event.target.value)}
+                      required
+                    />
+                    <button className="button" type="submit" disabled={loading}>
+                      {loading ? "Enviando..." : "Enviar codigo"}
+                    </button>
+                    <button className="auth-link" type="button" onClick={() => switchTab("login")}>
+                      Volver a iniciar sesion
+                    </button>
+                  </form>
+                ) : (
+                  <form className="auth-form" onSubmit={handleForgotVerify}>
+                    <p className="helper">Ingresa el codigo de 6 digitos que enviamos a tu email.</p>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Codigo"
+                      value={forgotCode}
+                      onChange={(event) => setForgotCode(event.target.value)}
+                      required
+                    />
+                    <button className="button" type="submit" disabled={loading}>
+                      {loading ? "Verificando..." : "Verificar codigo"}
+                    </button>
+                  </form>
+                )}
+              </>
+            )}
+
+            {error && <p className="auth-error">{error}</p>}
           </>
         )}
       </div>

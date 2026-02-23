@@ -1,34 +1,78 @@
 const API_URL = "";
 
-export async function loginAdmin(username, password) {
+async function readError(res, fallback) {
+  const data = await res.json().catch(() => ({}));
+  throw new Error(data.error || fallback);
+}
+
+export async function registerCustomer(payload) {
+  const res = await fetch(`${API_URL}/api/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    return readError(res, "No se pudo registrar");
+  }
+  return res.json();
+}
+
+export async function loginCustomer(payload) {
   const res = await fetch(`${API_URL}/api/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    return readError(res, "Credenciales invalidas");
+  }
+  return res.json();
+}
+
+export async function forgotPassword(payload) {
+  const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    return readError(res, "No se pudo enviar el codigo");
+  }
+  return res.json();
+}
+
+export async function verifyResetCode(payload) {
+  const res = await fetch(`${API_URL}/api/auth/reset-password/verify`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    return readError(res, "Codigo invalido o vencido");
+  }
+  return res.json();
+}
+
+export async function resetPassword(payload) {
+  const res = await fetch(`${API_URL}/api/auth/reset-password`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) {
+    return readError(res, "No se pudo restablecer la contrasena");
+  }
+  return res.json();
+}
+
+export async function loginAdmin(username, password) {
+  const res = await fetch(`${API_URL}/api/auth/admin/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
   });
-  if (!res.ok) throw new Error("Credenciales invalidas");
-  return res.json();
-}
-
-export async function loginAdminWithGoogle(idToken) {
-  const res = await fetch(`${API_URL}/api/auth/google-admin`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idToken }),
-  });
-  if (!res.ok) throw new Error("No autorizado");
-  return res.json();
-}
-
-export async function loginWithGoogle(idToken) {
-  const res = await fetch(`${API_URL}/api/auth/google`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ idToken }),
-  });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || "No se pudo iniciar sesion con Google");
+    return readError(res, "Credenciales invalidas");
   }
   return res.json();
 }
@@ -37,7 +81,9 @@ export async function fetchAdminStatus(token) {
   const res = await fetch(`${API_URL}/api/auth/admin-status`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error("No se pudo validar admin");
+  if (!res.ok) {
+    return readError(res, "No se pudo validar admin");
+  }
   return res.json();
 }
 
@@ -45,7 +91,9 @@ export async function fetchCustomer(token) {
   const res = await fetch(`${API_URL}/api/customers/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
-  if (!res.ok) throw new Error("No se pudo cargar el perfil");
+  if (!res.ok) {
+    return readError(res, "No se pudo cargar el perfil");
+  }
   return res.json();
 }
 
@@ -58,7 +106,9 @@ export async function updateCustomerProfile(token, payload) {
     },
     body: JSON.stringify(payload),
   });
-  if (!res.ok) throw new Error("No se pudo guardar el perfil");
+  if (!res.ok) {
+    return readError(res, "No se pudo guardar el perfil");
+  }
   return res.json();
 }
 
@@ -70,8 +120,7 @@ export async function deleteSavedPaymentMethod(token, paymentMethodId) {
     },
   });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || "No se pudo eliminar el metodo guardado");
+    return readError(res, "No se pudo eliminar el metodo guardado");
   }
   return res.json();
 }
@@ -95,8 +144,7 @@ export async function createProduct(formData, token) {
     body: formData,
   });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || "No se pudo crear el producto");
+    return readError(res, "No se pudo crear el producto");
   }
   return res.json();
 }
@@ -108,8 +156,7 @@ export async function updateProduct(productId, formData, token) {
     body: formData,
   });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || "No se pudo actualizar el producto");
+    return readError(res, "No se pudo actualizar el producto");
   }
   return res.json();
 }
@@ -120,8 +167,7 @@ export async function deleteProduct(productId, token) {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || "No se pudo eliminar el producto");
+    return readError(res, "No se pudo eliminar el producto");
   }
   return res.json();
 }
@@ -135,8 +181,7 @@ export async function initPayment(payload, token) {
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || "No se pudo inicializar el pago");
+    return readError(res, "No se pudo inicializar el pago");
   }
   return res.json();
 }
@@ -150,8 +195,7 @@ export async function processPayment(payload, token) {
     body: JSON.stringify(payload),
   });
   if (!res.ok) {
-    const data = await res.json().catch(() => ({}));
-    throw new Error(data.error || "No se pudo procesar el pago");
+    return readError(res, "No se pudo procesar el pago");
   }
   return res.json();
 }

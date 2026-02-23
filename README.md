@@ -1,57 +1,92 @@
-# Tienda Mabel (Base Full-Stack)
+# Tienda Mabel
 
-Base de tienda online para bazar mayorista con productos unicos y stock semanal. Stack: React + Vite, Node.js + Express, SQLite + Prisma, JWT.
-
-## Estructura
-- `backend/` API REST, Prisma, SQLite
-- `frontend/` Vite + React
+Backend Express + Prisma (SQLite) y frontend React/Vite.
 
 ## Requisitos
 - Node.js 18+
 
-## Configuracion rapida
-1) Backend
+## Ejecucion local
 ```bash
-cd backend
 npm install
-cp .env .env.local # opcional
-npx prisma migrate dev --name init
-npm run dev
+npm run start
 ```
-
-2) Frontend
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-Abrir `http://localhost:5173`.
-
-## Credenciales Admin (default)
-- `mabel` / `1234`
-- `elima` / `1234`
-
-Se pueden cambiar en `backend/.env` con `ADMIN_USERS`.
 
 ## Variables de entorno
-Backend (`backend/.env`):
-- `DATABASE_URL="file:./dev.db"`
-- `JWT_SECRET="change-this-secret"`
-- `ADMIN_USERS="mabel:1234,elima:1234"`
-- `PORT=4000`
+Mantener las actuales y agregar estas para recuperacion por email:
 
-Frontend (`frontend/.env`):
-- `VITE_API_URL="http://localhost:4000"`
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM`
 
-## Notas
-- Los productos con stock 0 se eliminan automaticamente.
-- Checkout sin registro.
-- Mercado Pago y Correo Argentino quedan preparados como servicios separados.
+Ejemplo:
 
-## Diagnostico de entorno (produccion)
-- Configurar `DIAG_KEY` en las variables de entorno de Hostinger.
-- Probar:
+```env
+JWT_SECRET=super-secreto
+ADMIN_USERS=FranYRolo:belgrano23
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu-cuenta@gmail.com
+SMTP_PASS=tu-app-password
+SMTP_FROM="Tienda Mabel <tu-cuenta@gmail.com>"
+```
+
+Si faltan variables SMTP, el servidor arranca igual y `POST /api/auth/forgot-password` responde `Email service not configured`.
+
+## Endpoints de auth (email/password)
+
+### Registro cliente
 ```bash
-curl -H "x-diag-key: <valor>" https://traviesa.shop/api/_diag/env
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"email":"cliente@test.com","username":"cliente01","password":"clave1234"}'
+```
+
+### Login cliente
+```bash
+curl -X POST http://localhost:3000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"cliente01","password":"clave1234"}'
+```
+
+### Forgot password (envia codigo)
+```bash
+curl -X POST http://localhost:3000/api/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{"email":"cliente@test.com"}'
+```
+
+### Verificar codigo y loguear
+```bash
+curl -X POST http://localhost:3000/api/auth/reset-password/verify \
+  -H "Content-Type: application/json" \
+  -d '{"email":"cliente@test.com","code":"123456"}'
+```
+
+### Resetear contrasena (opcional)
+```bash
+curl -X POST http://localhost:3000/api/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{"email":"cliente@test.com","code":"123456","newPassword":"nuevaClave123"}'
+```
+
+### Login admin
+```bash
+curl -X POST http://localhost:3000/api/auth/admin/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"FranYRolo","password":"belgrano23"}'
+```
+
+## Admin inicial
+Se asegura el usuario admin inicial si no existe:
+
+- email: `eccomfyarg@gmail.com`
+- username: `FranYRolo`
+- password: `belgrano23`
+
+Y tambien se respeta `ADMIN_USERS` con formato:
+
+```env
+ADMIN_USERS=usuario:password,usuario2:password2
 ```

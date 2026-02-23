@@ -1,46 +1,50 @@
-import React, { useEffect, useState } from "react";
-import { loginAdminWithGoogle } from "../api";
+import React, { useState } from "react";
+import { loginAdmin } from "../api";
 
 function AdminLogin({ onLogin }) {
-  const [error, setError] = useState(null);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-    if (!clientId || !window.google) return;
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
+    setLoading(true);
 
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: async (response) => {
-        try {
-          setLoading(true);
-          setError(null);
-          const data = await loginAdminWithGoogle(response.credential);
-          onLogin(data.token);
-        } catch (err) {
-          setError("Este Gmail no tiene acceso admin.");
-        } finally {
-          setLoading(false);
-        }
-      },
-    });
-
-    window.google.accounts.id.renderButton(document.getElementById("google-admin-button"), {
-      theme: "outline",
-      size: "large",
-      width: 280,
-      text: "continue_with",
-    });
-  }, [onLogin]);
+    try {
+      const data = await loginAdmin(username, password);
+      onLogin(data.token);
+    } catch (err) {
+      setError(err.message || "Credenciales invalidas");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
-    <div className="form">
+    <form className="form" onSubmit={handleSubmit}>
       <h2>Login Admin</h2>
-      <p className="helper">Acceso solo para emails autorizados.</p>
-      <div id="google-admin-button" className="google-button" />
-      {loading && <p className="helper">Conectando...</p>}
-      {error && <p className="helper">{error}</p>}
-    </div>
+      <p className="helper">Acceso solo para usuarios administradores.</p>
+      <input
+        type="text"
+        placeholder="Usuario"
+        value={username}
+        onChange={(event) => setUsername(event.target.value)}
+        required
+      />
+      <input
+        type="password"
+        placeholder="Contrasena"
+        value={password}
+        onChange={(event) => setPassword(event.target.value)}
+        required
+      />
+      <button className="button" type="submit" disabled={loading}>
+        {loading ? "Ingresando..." : "Ingresar"}
+      </button>
+      {error && <p className="auth-error">{error}</p>}
+    </form>
   );
 }
 

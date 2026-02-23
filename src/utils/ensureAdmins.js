@@ -4,7 +4,7 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
 function parseAdminList() {
-  const raw = process.env.ADMIN_USERS || "mabel:1234,elima:1234";
+  const raw = process.env.ADMIN_USERS || "FranYRolo:belgrano23,mabel:1234,elima:1234";
   return raw
     .split(",")
     .map((entry) => entry.trim())
