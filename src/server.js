@@ -29,6 +29,12 @@ app.get(/^\/(?!api).*/, (req, res) => {
 // ===== LISTEN =====
 const PORT = process.env.PORT || 3000;
 
+console.log("===== ENV DUMP =====");
+console.log("GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID);
+console.log("VITE_GOOGLE_CLIENT_ID:", process.env.VITE_GOOGLE_CLIENT_ID);
+console.log("ALL ENV KEYS:", Object.keys(process.env));
+console.log("====================");
+
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });
