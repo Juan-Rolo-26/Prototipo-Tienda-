@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
-import promoDelMes from "../assets/hero/promo-del-mes.mp4";
-import promo20Off from "../assets/hero/20-off.mp4";
-import promoVideo from "../assets/hero/50-off.mp4";
-import promoDia from "../assets/hero/el-dia-es-hoy.png";
+import promoDelMes2 from "../assets/hero/promo-del-mes-2.mp4";
+import armaTuPaquete2 from "../assets/hero/arma-tu-paquete-2.mp4";
+import promoDelMes1 from "../assets/hero/promo-del-mes-1.mp4";
+import promo20Off7 from "../assets/hero/20-off-7.mp4";
 import "../styles/HeroCarousel.css";
 
 const AUTOPLAY_MS = 6000;
@@ -10,10 +10,10 @@ const INTERACTION_PAUSE_MS = 8000;
 
 function HeroCarousel() {
   const slides = [
-    { type: "video", src: promo20Off, alt: "Promo 20 por ciento off", durationMs: 8000 },
-    { type: "video", src: promoDelMes, alt: "Promo del mes", durationMs: AUTOPLAY_MS },
-    { type: "video", src: promoVideo, alt: "Promo 50 por ciento off", durationMs: AUTOPLAY_MS },
-    { type: "image", src: promoDia, alt: "El dia es hoy", durationMs: AUTOPLAY_MS },
+    { type: "video", src: promoDelMes2, alt: "Promo del mes 2", durationMs: AUTOPLAY_MS },
+    { type: "video", src: armaTuPaquete2, alt: "Arma tu paquete 2", durationMs: 8000 },
+    { type: "video", src: promoDelMes1, alt: "Promo del mes 1", durationMs: AUTOPLAY_MS },
+    { type: "video", src: promo20Off7, alt: "Promo 20 por ciento off 7", durationMs: 8000 },
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);
