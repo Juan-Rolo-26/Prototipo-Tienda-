@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
 import promoDelMes2 from "../assets/hero/promo-del-mes-2.mp4";
 import armaTuPaquete2 from "../assets/hero/arma-tu-paquete-2.mp4";
-import promoDelMes1 from "../assets/hero/promo-del-mes-1.mp4";
+import elDiaEsHoyVideo from "../assets/hero/el-dia-es-hoy.mp4";
 import promo20Off7 from "../assets/hero/20-off-7.mp4";
+import promo20OffFallback from "../assets/hero/20-off.mp4";
+import promoDelMesFallback from "../assets/hero/promo-del-mes.mp4";
 import "../styles/HeroCarousel.css";
 
 const AUTOPLAY_MS = 6000;
@@ -10,10 +12,10 @@ const INTERACTION_PAUSE_MS = 8000;
 
 function HeroCarousel() {
   const slides = [
-    { type: "video", src: promoDelMes2, alt: "Promo del mes 2", durationMs: AUTOPLAY_MS },
+    { type: "video", src: promoDelMes2, fallbackSrc: promoDelMesFallback, alt: "Promo del mes 2", durationMs: AUTOPLAY_MS },
     { type: "video", src: armaTuPaquete2, alt: "Arma tu paquete 2", durationMs: 8000 },
-    { type: "video", src: promoDelMes1, alt: "Promo del mes 1", durationMs: AUTOPLAY_MS },
-    { type: "video", src: promo20Off7, alt: "Promo 20 por ciento off 7", durationMs: 8000 },
+    { type: "video", src: elDiaEsHoyVideo, fallbackSrc: promoDelMesFallback, alt: "El dia es hoy", durationMs: AUTOPLAY_MS },
+    { type: "video", src: promo20Off7, fallbackSrc: promo20OffFallback, alt: "Promo 20 por ciento off 7", durationMs: 8000 },
   ];
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -92,6 +94,15 @@ function HeroCarousel() {
                 muted
                 playsInline
                 preload="metadata"
+                onError={(event) => {
+                  if (!slide.fallbackSrc) return;
+                  const video = event.currentTarget;
+                  if (video.src?.includes(slide.fallbackSrc)) return;
+                  video.src = slide.fallbackSrc;
+                  video.load();
+                  const playPromise = video.play();
+                  if (playPromise?.catch) playPromise.catch(() => {});
+                }}
                 ref={(el) => {
                   videoRefs.current[index] = el;
                 }}
