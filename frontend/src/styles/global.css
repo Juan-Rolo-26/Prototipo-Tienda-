@@ -1379,25 +1379,25 @@ body {
 
 /* ===== TEMP: Neutral Trial (reversible) ===== */
 :root {
-  --bg: #f3f3f3;
-  --bg-accent: #ececec;
-  --text: #1a1a1a;
-  --muted: #4d4d4d;
-  --primary: #c9a86a;
-  --primary-dark: #b38f52;
+  --bg: #f7f2f4;
+  --bg-accent: #f2e7eb;
+  --text: #2f242b;
+  --muted: #6f5f68;
+  --primary: #d3a0ad;
+  --primary-dark: #bb7f90;
   --card: #ffffff;
-  --border: #d6d0c4;
-  --ink: #1a1a1a;
+  --border: #e4d2d8;
+  --ink: #241a20;
 }
 
 body {
-  background: #f3f3f3;
-  color: #1a1a1a;
+  background: #f7f3f5;
+  color: #2f242b;
 }
 
 .ml-header {
-  background: #d9d1c3;
-  border-bottom-color: #b7ab93;
+  background: #dfd2d7;
+  border-bottom-color: #c8b5bd;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   animation: barToneShift 9s ease-in-out infinite;
 }
@@ -1416,39 +1416,39 @@ body {
 .ml-location-link,
 .helper,
 .badge {
-  color: #1f1f1f;
+  color: #2f242b;
 }
 
 .nav-link.active::after {
-  background: #c9a86a;
+  background: #d3a0ad;
 }
 
 .nav-badge {
-  background: #c9a86a;
-  color: #111111;
+  background: #d3a0ad;
+  color: #241a20;
 }
 
 .button {
-  background: #c9a86a;
-  border-color: #c9a86a;
-  color: #111111;
+  background: #d3a0ad;
+  border-color: #d3a0ad;
+  color: #241a20;
 }
 
 .button:hover {
-  background: #b38f52;
+  background: #bb7f90;
   color: #ffffff;
 }
 
 .button.secondary {
   background: #ffffff;
-  border-color: #c9a86a;
-  color: #1a1a1a;
+  border-color: #d3a0ad;
+  color: #2f242b;
 }
 
 .button.secondary:hover,
 .button.secondary.active {
-  background: #efe6d6;
-  color: #1a1a1a;
+  background: #f2e7eb;
+  color: #2f242b;
 }
 
 .form,
@@ -1479,24 +1479,24 @@ body {
 }
 
 .route-loader {
-  border-top-color: #c9a86a;
+  border-top-color: #d3a0ad;
 }
 
 @keyframes barToneShift {
   0% {
-    background: #d9d1c3;
+    background: #dfd2d7;
   }
 
   33% {
-    background: #d4ccbc;
+    background: #d9cad0;
   }
 
   66% {
-    background: #d6cebf;
+    background: #dccfd4;
   }
 
   100% {
-    background: #d9d1c3;
+    background: #dfd2d7;
   }
 }
 
@@ -1554,7 +1554,7 @@ body {
 
 /* ===== Promo v2: secuencia lenta en 3 fases ===== */
 .promo-banner {
-  background: linear-gradient(120deg, #e4dbc9 0%, #d3c8b1 100%);
+  background: linear-gradient(120deg, #eadfe4 0%, #dbcbd3 100%);
   min-height: 198px;
   padding: 12px 22px;
   margin: 12px 0 18px;
@@ -1596,7 +1596,7 @@ body {
   overflow: visible;
   background:
     linear-gradient(110deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 45%),
-    linear-gradient(120deg, #d9d1c3 0%, #d2c8b8 48%, #d9d1c3 100%);
+    linear-gradient(120deg, #dfd2d7 0%, #d5c5cc 48%, #dfd2d7 100%);
   background-size: 180% 100%, 220% 100%;
   animation: mlHeaderGlow 13s ease-in-out infinite;
   margin-bottom: 0 !important;
@@ -1610,9 +1610,9 @@ body {
     95deg,
     rgba(255, 255, 255, 0) 28%,
     rgba(255, 255, 255, 0.18) 40%,
-    rgba(242, 219, 159, 0.52) 48%,
-    rgba(255, 247, 213, 0.72) 52%,
-    rgba(242, 219, 159, 0.4) 58%,
+    rgba(226, 176, 194, 0.52) 48%,
+    rgba(255, 240, 246, 0.74) 52%,
+    rgba(226, 176, 194, 0.4) 58%,
     rgba(255, 255, 255, 0) 72%
   );
   transform: translateX(-120%);
@@ -1634,7 +1634,7 @@ body {
   overflow: hidden;
   background:
     linear-gradient(120deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0) 42%),
-    linear-gradient(120deg, #e4dbc9 0%, #d3c8b1 100%);
+    linear-gradient(120deg, #eadfe4 0%, #dbcbd3 100%);
   background-size: 210% 100%, 100% 100%;
   animation: promoPanelGlow 14s ease-in-out infinite;
 }
