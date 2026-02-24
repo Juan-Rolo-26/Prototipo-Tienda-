@@ -137,23 +137,21 @@ function AuthModal({ open, onClose, onAuthSuccess, customerProfile, customerIsAd
               <div><strong>Codigo postal:</strong> {customerProfile.postalCode || ""}</div>
               <div><strong>Telefono:</strong> {customerProfile.phone || ""}</div>
             </div>
-            <div className="profile-actions">
-              {customerIsAdmin && (
-                <Link className="button secondary" to="/admin" onClick={onClose}>
-                  Agregar productos
-                </Link>
-              )}
-              <button
-                className="button"
-                type="button"
-                onClick={() => {
-                  onLogout();
-                  onClose();
-                }}
-              >
-                Cerrar sesion
-              </button>
-            </div>
+            {customerIsAdmin && (
+              <Link className="button secondary" to="/admin" onClick={onClose}>
+                Agregar productos
+              </Link>
+            )}
+            <button
+              className="button"
+              type="button"
+              onClick={() => {
+                onLogout();
+                onClose();
+              }}
+            >
+              Cerrar sesion
+            </button>
           </div>
         ) : (
           <>

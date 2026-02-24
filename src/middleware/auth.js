@@ -46,7 +46,7 @@ function requireCustomer(req, res, next) {
   }
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    if (decoded.role !== "customer" && decoded.role !== "admin") {
+    if (decoded.role !== "customer") {
       return res.status(403).json({ error: "Forbidden" });
     }
     req.customer = decoded;
