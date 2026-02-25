@@ -191,16 +191,6 @@ function App() {
           <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/mis-compras">
             Mis compras
           </NavLink>
-          {isMabelMode && (
-            <>
-              <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/admin">
-                Agregar producto
-              </NavLink>
-              <button className="ml-icon-link" type="button" onClick={handleMabelLogout} aria-label="Salir modo Mabel">
-                Salir modo Mabel
-              </button>
-            </>
-          )}
           <div
             className="lot-hover-wrap"
             onMouseEnter={openLotPreview}
@@ -275,7 +265,17 @@ function App() {
               </div>
             )}
           </div>
+          {isMabelMode && (
+            <button className="mabel-exit-btn" type="button" onClick={handleMabelLogout}>
+              Salir modo Mabel
+            </button>
+          )}
         </nav>
+        {isMabelMode && (
+          <NavLink className="mabel-add-btn" to="/admin">
+            Agregar producto
+          </NavLink>
+        )}
       </header>
 
       <Routes>

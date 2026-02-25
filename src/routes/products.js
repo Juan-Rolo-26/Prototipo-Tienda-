@@ -24,6 +24,23 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+const uploadMedia = upload.array("media", 10);
+
+function runUpload(req, res) {
+  return new Promise((resolve, reject) => {
+    uploadMedia(req, res, (error) => {
+      if (!error) {
+        resolve();
+        return;
+      }
+      if (error instanceof multer.MulterError) {
+        reject(new Error(`Upload error: ${error.message}`));
+        return;
+      }
+      reject(error);
+    });
+  });
+}
 
 function normalizeProduct(product) {
   const media = (product.media || [])
@@ -83,12 +100,19 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", requireMabel, upload.array("media", 10), async (req, res) => {
+router.post("/", requireMabel, async (req, res) => {
   try {
+    await runUpload(req, res);
     const { name, price, width, height, weight, stock, description } = req.body;
     const files = req.files || [];
     if (!name || !price || !width || !height || !weight || files.length === 0) {
       return res.status(400).json({ error: "Missing required fields" });
+    }
+    if (![width, height, weight].every((value) => Number.isFinite(Number(value)))) {
+      return res.status(400).json({ error: "Width, height and weight must be valid numbers" });
+    }
+    if (stock !== undefined && !Number.isFinite(Number(stock))) {
+      return res.status(400).json({ error: "Stock must be a valid number" });
     }
 
     const mediaItems = files.map((file, index) => ({
@@ -122,15 +146,21 @@ router.post("/", requireMabel, upload.array("media", 10), async (req, res) => {
       include: { media: true },
     });
 
-    res.status(201).json(normalizeProduct(product));
+    return res.status(201).json(normalizeProduct(product));
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("[products/create] error", {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+    });
+    return res.status(400).json({ error: error?.message || "No se pudo crear el producto" });
   }
 });
 
-router.put("/:id", requireMabel, upload.array("media", 10), async (req, res) => {
+router.put("/:id", requireMabel, async (req, res) => {
   const { id } = req.params;
   try {
+    await runUpload(req, res);
     const payload = {};
     const { name, price, width, height, weight, stock, description, existingMedia } = req.body;
 
@@ -180,9 +210,14 @@ router.put("/:id", requireMabel, upload.array("media", 10), async (req, res) => 
       return res.json({ deleted: true });
     }
 
-    res.json(normalizeProduct(updated));
+    return res.json(normalizeProduct(updated));
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    console.error("[products/update] error", {
+      message: error?.message,
+      code: error?.code,
+      meta: error?.meta,
+    });
+    return res.status(400).json({ error: error?.message || "No se pudo actualizar el producto" });
   }
 });
 

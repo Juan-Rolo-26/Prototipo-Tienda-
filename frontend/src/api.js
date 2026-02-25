@@ -1,5 +1,6 @@
 const API_URL = "";
 const AUTH_TIMEOUT_MS = 12000;
+const UPLOAD_TIMEOUT_MS = 40000;
 
 async function readError(res, fallback) {
   const data = await res.json().catch(() => ({}));
@@ -167,27 +168,51 @@ export async function fetchProduct(id) {
 }
 
 export async function createProduct(formData, token) {
-  const res = await fetch(`${API_URL}/api/products`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
-  if (!res.ok) {
-    return readError(res, "No se pudo crear el producto");
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${API_URL}/api/products`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      return readError(res, "No se pudo crear el producto");
+    }
+    return res.json();
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("No se pudo guardar. El servidor demoro demasiado.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return res.json();
 }
 
 export async function updateProduct(productId, formData, token) {
-  const res = await fetch(`${API_URL}/api/products/${productId}`, {
-    method: "PUT",
-    headers: { Authorization: `Bearer ${token}` },
-    body: formData,
-  });
-  if (!res.ok) {
-    return readError(res, "No se pudo actualizar el producto");
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), UPLOAD_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${API_URL}/api/products/${productId}`, {
+      method: "PUT",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+      signal: controller.signal,
+    });
+    if (!res.ok) {
+      return readError(res, "No se pudo actualizar el producto");
+    }
+    return res.json();
+  } catch (error) {
+    if (error.name === "AbortError") {
+      throw new Error("No se pudo actualizar. El servidor demoro demasiado.");
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
-  return res.json();
 }
 
 export async function deleteProduct(productId, token) {
