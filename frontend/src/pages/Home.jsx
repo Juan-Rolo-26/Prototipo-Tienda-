@@ -63,7 +63,7 @@ function Home({ onAdd, searchQuery, cart, isAdmin }) {
     if (!confirmProduct) return;
     setDeleting(true);
     try {
-      await deleteProduct(confirmProduct.id, localStorage.getItem("adminToken"));
+      await deleteProduct(confirmProduct.id, localStorage.getItem("mabelToken"));
       setConfirmProduct(null);
       loadProducts();
     } catch (err) {

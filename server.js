@@ -5,6 +5,7 @@ const authRoutes = require("./src/routes/auth");
 const productRoutes = require("./src/routes/products");
 const orderRoutes = require("./src/routes/orders");
 const customerRoutes = require("./src/routes/customers");
+const mabelRoutes = require("./src/routes/mabel");
 const paymentRoutes = require("./src/routes/payments");
 const webhookRoutes = require("./src/routes/webhooks");
 const testRoutes = require("./src/routes/test");
@@ -38,6 +39,7 @@ app.get("/debug-files", (req, res) => {
 
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 app.use("/api/auth", authRoutes);
+app.use("/api/mabel", mabelRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/customers", customerRoutes);

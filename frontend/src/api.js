@@ -48,6 +48,14 @@ export async function loginCustomer(payload) {
   return postJsonWithHandling("/api/auth/login", payload, "Credenciales invalidas");
 }
 
+export async function unlockMabelMode(password) {
+  return postJsonWithHandling(
+    "/api/mabel/unlock",
+    { password },
+    "No se pudo activar el modo Mabel"
+  );
+}
+
 export async function forgotPassword(payload) {
   const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
     method: "POST",

@@ -2,7 +2,7 @@ const express = require("express");
 const path = require("path");
 const multer = require("multer");
 const prisma = require("../lib/prisma");
-const { requireAdmin } = require("../middleware/auth");
+const { requireMabel } = require("../middleware/mabelAuth");
 const { parsePriceToCents, formatCentsToNumber } = require("../utils/pricing");
 
 const router = express.Router();
@@ -83,7 +83,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.post("/", requireAdmin, upload.array("media", 10), async (req, res) => {
+router.post("/", requireMabel, upload.array("media", 10), async (req, res) => {
   try {
     const { name, price, width, height, weight, stock, description } = req.body;
     const files = req.files || [];
@@ -128,7 +128,7 @@ router.post("/", requireAdmin, upload.array("media", 10), async (req, res) => {
   }
 });
 
-router.put("/:id", requireAdmin, upload.array("media", 10), async (req, res) => {
+router.put("/:id", requireMabel, upload.array("media", 10), async (req, res) => {
   const { id } = req.params;
   try {
     const payload = {};
@@ -186,7 +186,7 @@ router.put("/:id", requireAdmin, upload.array("media", 10), async (req, res) => 
   }
 });
 
-router.delete("/:id", requireAdmin, async (req, res) => {
+router.delete("/:id", requireMabel, async (req, res) => {
   const { id } = req.params;
   try {
     await prisma.product.delete({ where: { id } });

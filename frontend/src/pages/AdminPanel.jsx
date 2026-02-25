@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react";
-import { createProduct, updateProduct } from "../api";
-import { useNavigate } from "react-router-dom";
+import { createProduct, fetchProduct, updateProduct } from "../api";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const initialState = {
   name: "",
@@ -19,6 +19,8 @@ const GRID_GAP = 10;
 const API_URL = "";
 
 function AdminPanel({ token, onLogout }) {
+  const [searchParams] = useSearchParams();
+  const editId = searchParams.get("edit");
   const [form, setForm] = useState(initialState);
   const [media, setMedia] = useState([]);
   const [status, setStatus] = useState(null);
@@ -32,6 +34,52 @@ function AdminPanel({ token, onLogout }) {
   const fileRef = useRef(null);
   const gridRef = useRef(null);
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!editId) return;
+    let active = true;
+    setLoading(true);
+    setStatus(null);
+    fetchProduct(editId)
+      .then((product) => {
+        if (!active) return;
+        setCurrentProduct(product);
+        setForm({
+          name: product.name || "",
+          price: String(product.price ?? ""),
+          width: String(product.width ?? ""),
+          height: String(product.height ?? ""),
+          weight: String(product.weight ?? ""),
+          stock: String(product.stock ?? "1"),
+          description: product.description || "",
+        });
+        const productMedia = (product.media || []).length
+          ? [...product.media].sort((a, b) => a.position - b.position)
+          : product.image
+          ? [{ url: product.image, type: "image", position: 0 }]
+          : [];
+        const mapped = productMedia.map((item) => ({
+          id: crypto.randomUUID(),
+          file: null,
+          preview: `${API_URL}${item.url}`,
+          remote: true,
+          url: item.url,
+          type: item.type || "image",
+        }));
+        setMedia(mapped);
+        setIsDirty(false);
+      })
+      .catch((error) => {
+        if (!active) return;
+        setStatus(error.message || "No se pudo cargar el producto para editar");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [editId]);
 
   const showToast = (message) => {
     setToast(message);
@@ -111,7 +159,8 @@ function AdminPanel({ token, onLogout }) {
       }));
       setMedia(mapped);
     } catch (error) {
-      if (String(error.message).toLowerCase().includes("invalid token")) {
+      const msg = String(error.message || "").toLowerCase();
+      if (msg.includes("invalid") || msg.includes("missing mabel token")) {
         onLogout?.();
       }
       setStatus(error.message);
@@ -155,7 +204,8 @@ function AdminPanel({ token, onLogout }) {
       setMedia(mapped);
       setStatus("Producto actualizado.");
     } catch (error) {
-      if (String(error.message).toLowerCase().includes("invalid token")) {
+      const msg = String(error.message || "").toLowerCase();
+      if (msg.includes("invalid") || msg.includes("missing mabel token")) {
         onLogout?.();
       }
       setStatus(error.message);
@@ -240,7 +290,7 @@ function AdminPanel({ token, onLogout }) {
 
   return (
     <div className="grid" style={{ gridTemplateColumns: "1.4fr 0.8fr" }}>
-      <form className="form" onSubmit={handleCreate}>
+      <form className="form" onSubmit={currentProduct ? (e) => e.preventDefault() : handleCreate}>
         <h2>Completa los datos del producto</h2>
         <input name="name" placeholder="Nombre" value={form.name} onChange={handleChange} required />
         <input name="price" placeholder="Precio (ej: 14500)" value={form.price} onChange={handleChange} required />

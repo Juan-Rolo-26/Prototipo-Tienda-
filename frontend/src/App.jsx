@@ -1,40 +1,18 @@
 import React, { useMemo, useRef, useState } from "react";
-import { Routes, Route, Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Routes, Route, Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import Lottie from "lottie-react";
 import Home from "./pages/Home";
 import Checkout from "./pages/Checkout";
-import AdminLogin from "./pages/AdminLogin";
 import AdminPanel from "./pages/AdminPanel";
+import MabelAccess from "./pages/MabelAccess";
 import ProductDetail from "./pages/ProductDetail";
-import LocationPage from "./pages/LocationPage";
 import PurchasesPage from "./pages/PurchasesPage";
 import logo from "./assets/logo.png";
 import routeLoaderAnimation from "./assets/route-loader.json";
-import AuthModal from "./components/AuthModal";
-import { fetchCustomer } from "./api";
-function formatLocation(profile) {
-  if (!profile?.address1) return "Agregar ubicacion";
-  const line = [profile.address1, profile.city, profile.province].filter(Boolean).join(" · ");
-  return line || "Agregar ubicacion";
-}
 
 function App() {
   const [cart, setCart] = useState([]);
-  const [adminToken, setAdminToken] = useState(() => localStorage.getItem("adminToken"));
-  const [customerToken, setCustomerToken] = useState(
-    () => localStorage.getItem("auth_token") || localStorage.getItem("customerToken")
-  );
-  const [customerProfile, setCustomerProfile] = useState(() => {
-    try {
-      const raw = localStorage.getItem("customerProfile");
-      return raw ? JSON.parse(raw) : null;
-    } catch {
-      return null;
-    }
-  });
-  const [customerIsAdmin, setCustomerIsAdmin] = useState(() => localStorage.getItem("customerIsAdmin") === "true");
-  const [authOpen, setAuthOpen] = useState(false);
-  const [authToast, setAuthToast] = useState(null);
+  const [mabelToken, setMabelToken] = useState(() => localStorage.getItem("mabelToken"));
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [lotPulse, setLotPulse] = useState(false);
@@ -46,6 +24,8 @@ function App() {
   const lotPreviewCloseTimerRef = useRef(null);
   const location = useLocation();
   const navigate = useNavigate();
+
+  const isMabelMode = Boolean(mabelToken);
 
   const startRouteLoader = React.useCallback(() => {
     if (routeTimerRef.current) clearTimeout(routeTimerRef.current);
@@ -64,50 +44,12 @@ function App() {
   }, []);
 
   React.useEffect(() => {
-    setAuthOpen(false);
-  }, [location.pathname]);
-
-  React.useEffect(() => {
     startRouteLoader();
     return () => {
       if (routeTimerRef.current) clearTimeout(routeTimerRef.current);
       if (lotPreviewCloseTimerRef.current) clearTimeout(lotPreviewCloseTimerRef.current);
     };
   }, [location.pathname, startRouteLoader]);
-
-  React.useEffect(() => {
-    if (!customerToken) {
-      setCustomerProfile(null);
-      setCustomerIsAdmin(Boolean(adminToken));
-      return;
-    }
-
-    // Admin authenticated through customer flow uses the same token for both roles.
-    // Skip /customers/me because that endpoint is customer-only and returns 403 for admin tokens.
-    if (adminToken && customerToken === adminToken) {
-      setCustomerIsAdmin(true);
-      localStorage.setItem("customerIsAdmin", "true");
-      return;
-    }
-
-    fetchCustomer(customerToken)
-      .then((data) => {
-        setCustomerProfile(data.customer);
-        localStorage.setItem("customerProfile", JSON.stringify(data.customer));
-      })
-      .catch(() => {
-        if (adminToken && customerToken === adminToken) {
-          setCustomerIsAdmin(true);
-          return;
-        }
-        localStorage.removeItem("auth_token");
-        localStorage.removeItem("customerToken");
-        localStorage.removeItem("customerProfile");
-        setCustomerToken(null);
-      });
-    setCustomerIsAdmin(Boolean(adminToken));
-    localStorage.setItem("customerIsAdmin", adminToken ? "true" : "false");
-  }, [customerToken, adminToken]);
 
   const lotCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
@@ -186,43 +128,14 @@ function App() {
   const clearCart = () => setCart([]);
   const previewTotal = useMemo(() => cart.reduce((sum, item) => sum + item.price * item.quantity, 0), [cart]);
 
-  const handleLogin = (token) => {
-    localStorage.setItem("adminToken", token);
-    setAdminToken(token);
+  const handleMabelUnlock = (token) => {
+    localStorage.setItem("mabelToken", token);
+    setMabelToken(token);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("adminToken");
-    setAdminToken(null);
-  };
-
-  const handleCustomerAuthSuccess = (data, message) => {
-    localStorage.setItem("auth_token", data.token);
-    localStorage.setItem("customerToken", data.token);
-    setCustomerToken(data.token);
-    setCustomerProfile(data.user || null);
-    localStorage.setItem("customerProfile", JSON.stringify(data.user || null));
-    if (data?.user?.role === "admin") {
-      localStorage.setItem("adminToken", data.token);
-      setAdminToken(data.token);
-    } else {
-      localStorage.removeItem("adminToken");
-      setAdminToken(null);
-    }
-    setAuthToast(message || "Inicio de sesion exitoso");
-    setTimeout(() => setAuthToast(null), 2500);
-  };
-
-  const handleCustomerLogout = () => {
-    localStorage.removeItem("auth_token");
-    localStorage.removeItem("customerToken");
-    localStorage.removeItem("customerIsAdmin");
-    localStorage.removeItem("customerProfile");
-    localStorage.removeItem("adminToken");
-    setAdminToken(null);
-    setCustomerToken(null);
-    setCustomerProfile(null);
-    setCustomerIsAdmin(false);
+  const handleMabelLogout = () => {
+    localStorage.removeItem("mabelToken");
+    setMabelToken(null);
   };
 
   return (
@@ -241,23 +154,6 @@ function App() {
               }}
             >
               <img className="ml-logo-img" src={logo} alt="Bazar Velazquez" />
-            </Link>
-            <Link
-              className="ml-location-link"
-              to="/ubicacion"
-              onClick={(event) => {
-                if (!customerToken) {
-                  event.preventDefault();
-                  setAuthOpen(true);
-                }
-              }}
-            >
-              <img
-                className="ml-pin-icon"
-                src="https://cdn-icons-png.flaticon.com/512/2794/2794702.png"
-                alt="Ubicacion"
-              />
-              <span>{formatLocation(customerProfile)}</span>
             </Link>
           </div>
 
@@ -295,6 +191,16 @@ function App() {
           <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/mis-compras">
             Mis compras
           </NavLink>
+          {isMabelMode && (
+            <>
+              <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/admin">
+                Agregar producto
+              </NavLink>
+              <button className="ml-icon-link" type="button" onClick={handleMabelLogout} aria-label="Salir modo Mabel">
+                Salir modo Mabel
+              </button>
+            </>
+          )}
           <div
             className="lot-hover-wrap"
             onMouseEnter={openLotPreview}
@@ -369,33 +275,16 @@ function App() {
               </div>
             )}
           </div>
-          <button className="ml-icon-link" type="button" aria-label="Usuario" onClick={() => setAuthOpen(true)}>
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Z" fill="none" stroke="currentColor" strokeWidth="1.6" />
-              <path d="M4 20c1.6-3 4.3-4.5 8-4.5s6.4 1.5 8 4.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-            </svg>
-          </button>
         </nav>
       </header>
 
       <Routes>
         <Route
           path="/"
-          element={<Home onAdd={addToCart} searchQuery={searchQuery} cart={cart} isAdmin={customerIsAdmin} />}
+          element={<Home onAdd={addToCart} searchQuery={searchQuery} cart={cart} isAdmin={isMabelMode} />}
         />
-        <Route path="/producto/:id" element={<ProductDetail onAdd={addToCart} />} />
+        <Route path="/producto/:id" element={<ProductDetail onAdd={addToCart} isMabelMode={isMabelMode} />} />
         <Route path="/mis-compras" element={<PurchasesPage />} />
-        <Route
-          path="/ubicacion"
-          element={
-            <LocationPage
-              customerToken={customerToken}
-              customerProfile={customerProfile}
-              onCustomerUpdate={setCustomerProfile}
-              onRequireLogin={() => setAuthOpen(true)}
-            />
-          }
-        />
         <Route
           path="/checkout"
           element={
@@ -406,33 +295,24 @@ function App() {
                 onQtyChange: updateCartQuantity,
               }))}
               onClear={clearCart}
-              customerToken={customerToken}
-              customerProfile={customerProfile}
-              onCustomerUpdate={setCustomerProfile}
+              customerToken={null}
+              customerProfile={null}
+              onCustomerUpdate={() => {}}
             />
           }
         />
         <Route
           path="/admin"
           element={
-            adminToken ? (
-              <AdminPanel token={adminToken} onLogout={handleLogout} />
+            isMabelMode ? (
+              <AdminPanel token={mabelToken} onLogout={handleMabelLogout} />
             ) : (
-              <AdminLogin onLogin={handleLogin} />
+              <Navigate to="/mabel-acceso" replace />
             )
           }
         />
+        <Route path="/mabel-acceso" element={<MabelAccess onUnlock={handleMabelUnlock} />} />
       </Routes>
-
-      <AuthModal
-        open={authOpen}
-        onClose={() => setAuthOpen(false)}
-        onAuthSuccess={handleCustomerAuthSuccess}
-        customerProfile={customerProfile}
-        customerIsAdmin={customerIsAdmin}
-        onLogout={handleCustomerLogout}
-      />
-      {authToast && <div className="toast">{authToast}</div>}
 
       {routeLoading && (
         <div className="route-loader-backdrop">

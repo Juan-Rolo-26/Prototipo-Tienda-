@@ -1,11 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useParams } from "react-router-dom";
 import { fetchProduct, fetchProducts } from "../api";
 import { formatPrice } from "../utils/format";
 import ProductCard from "../components/ProductCard";
 
-function ProductDetail({ onAdd }) {
+function ProductDetail({ onAdd, isMabelMode = false }) {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -133,6 +135,15 @@ function ProductDetail({ onAdd }) {
           <button className="button product-add" type="button" onClick={handleAdd}>
             Agregar al paquete
           </button>
+          {isMabelMode && (
+            <button
+              className="button secondary product-add"
+              type="button"
+              onClick={() => navigate(`/admin?edit=${product.id}`)}
+            >
+              Editar producto
+            </button>
+          )}
         </div>
       </div>
 
