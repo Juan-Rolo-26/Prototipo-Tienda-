@@ -29,6 +29,28 @@ app.get("/api/health", (req, res) => {
   res.json({ ok: true });
 });
 
+app.get("/api/runtime-check", (req, res) => {
+  const databaseUrl = String(process.env.DATABASE_URL || "");
+  let databaseHost = null;
+
+  if (databaseUrl) {
+    try {
+      databaseHost = new URL(databaseUrl).hostname || null;
+    } catch (_error) {
+      databaseHost = "invalid_url";
+    }
+  }
+
+  return res.json({
+    ok: true,
+    diag_key_present: Boolean(process.env.DIAG_KEY),
+    database_url_present: Boolean(databaseUrl),
+    database_host: databaseHost,
+    node_env: process.env.NODE_ENV || null,
+    timestamp: new Date().toISOString(),
+  });
+});
+
 app.get("/debug-files", (req, res) => {
   const fs = require("fs");
   const path = require("path");
