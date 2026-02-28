@@ -1310,12 +1310,12 @@ body {
 
 .ml-logo-link {
   position: absolute;
-  top: 0;
+  top: 50%;
   left: 24px;
-  width: 395px;
-  height: 228px;
+  width: 415px;
+  height: 242px;
   overflow: visible;
-  transform: none;
+  transform: translateY(-50%);
 }
 
 .ml-logo-img {
@@ -1327,7 +1327,7 @@ body {
 
 .ml-search-wrap {
   position: absolute;
-  left: 424px;
+  left: 448px;
   right: 440px;
   bottom: 60px;
   margin-top: 0;
