@@ -7,7 +7,7 @@ import AdminPanel from "./pages/AdminPanel";
 import MabelAccess from "./pages/MabelAccess";
 import ProductDetail from "./pages/ProductDetail";
 import PurchasesPage from "./pages/PurchasesPage";
-import logo from "./assets/logo.png";
+import logo from "./assets/logo-traviesa-ropa.jpeg";
 import routeLoaderAnimation from "./assets/route-loader.json";
 
 function App() {
@@ -153,7 +153,7 @@ function App() {
                 startRouteLoader();
               }}
             >
-              <img className="ml-logo-img" src={logo} alt="Bazar Velazquez" />
+              <img className="ml-logo-img" src={logo} alt="Traviesa" />
             </Link>
           </div>
 

@@ -426,6 +426,7 @@ button {
 .product-page {
   display: grid;
   gap: 32px;
+  margin-top: clamp(18px, 2.4vw, 34px);
 }
 
 .product-add {
