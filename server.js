@@ -49,6 +49,7 @@ app.get("/api/runtime-check", (req, res) => {
     diag_key_present: Boolean(process.env.DIAG_KEY),
     database_url_present: Boolean(databaseUrl),
     database_host: databaseHost,
+    prisma_client_engine_type: process.env.PRISMA_CLIENT_ENGINE_TYPE || null,
     node_env: process.env.NODE_ENV || null,
     timestamp: new Date().toISOString(),
   });

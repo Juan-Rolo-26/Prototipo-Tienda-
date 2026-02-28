@@ -6,6 +6,7 @@ const FALLBACK_ENV = {
   DIAG_KEY: "abc123_test_runtime",
   DATABASE_URL:
     "mysql://u266391435_franchela:Isla-caiman123@srv1660.hstgr.io:3306/u266391435_tienda_mabel?connect_timeout=5&charset=utf8mb4",
+  PRISMA_CLIENT_ENGINE_TYPE: "binary",
 };
 
 function applyRuntimeFallbackEnv() {
