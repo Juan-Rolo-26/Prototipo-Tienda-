@@ -19,6 +19,7 @@ function App() {
   const [lotOpen, setLotOpen] = useState(false);
   const [lotPreviewOpen, setLotPreviewOpen] = useState(false);
   const [routeLoading, setRouteLoading] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const lotIconRef = useRef(null);
   const routeTimerRef = useRef(null);
   const lotPreviewCloseTimerRef = useRef(null);
@@ -50,6 +51,26 @@ function App() {
       if (lotPreviewCloseTimerRef.current) clearTimeout(lotPreviewCloseTimerRef.current);
     };
   }, [location.pathname, startRouteLoader]);
+
+  React.useEffect(() => {
+    if (!drawerOpen) {
+      document.body.style.overflow = '';
+      return;
+    }
+    document.body.style.overflow = 'hidden';
+    const handleKey = (e) => { if (e.key === 'Escape') setDrawerOpen(false); };
+    window.addEventListener('keydown', handleKey);
+    return () => {
+      window.removeEventListener('keydown', handleKey);
+      document.body.style.overflow = '';
+    };
+  }, [drawerOpen]);
+
+  React.useEffect(() => {
+    const handleResize = () => { if (window.innerWidth > 860) setDrawerOpen(false); };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   const lotCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
 
@@ -185,10 +206,10 @@ function App() {
         </div>
 
         <nav className="ml-nav-row">
-          <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/">
+          <NavLink className={({ isActive }) => `nav-link ml-nav-page-link ${isActive ? "active" : ""}`} to="/">
             Tienda
           </NavLink>
-          <NavLink className={({ isActive }) => `nav-link ${isActive ? "active" : ""}`} to="/mis-compras">
+          <NavLink className={({ isActive }) => `nav-link ml-nav-page-link ${isActive ? "active" : ""}`} to="/mis-compras">
             Mis compras
           </NavLink>
           <div
@@ -265,6 +286,16 @@ function App() {
               </div>
             )}
           </div>
+          <button
+            className="ml-hamburger"
+            type="button"
+            aria-label="Abrir menú"
+            onClick={() => setDrawerOpen(true)}
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M3 6h18M3 12h18M3 18h18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </button>
         </nav>
         {isMabelMode && (
           <div className="mabel-actions-row">
@@ -321,6 +352,39 @@ function App() {
           </div>
         </div>
       )}
+
+      <div
+        className={`ml-drawer-backdrop${drawerOpen ? ' open' : ''}`}
+        onClick={() => setDrawerOpen(false)}
+      />
+      <aside className={`ml-drawer${drawerOpen ? ' open' : ''}`}>
+        <button
+          className="ml-drawer-close"
+          type="button"
+          aria-label="Cerrar menú"
+          onClick={() => setDrawerOpen(false)}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M18 6 6 18M6 6l12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+          </svg>
+        </button>
+        <nav className="ml-drawer-nav">
+          <NavLink
+            className={({ isActive }) => `ml-drawer-link${isActive ? ' active' : ''}`}
+            to="/"
+            onClick={() => setDrawerOpen(false)}
+          >
+            Tienda
+          </NavLink>
+          <NavLink
+            className={({ isActive }) => `ml-drawer-link${isActive ? ' active' : ''}`}
+            to="/mis-compras"
+            onClick={() => setDrawerOpen(false)}
+          >
+            Mis compras
+          </NavLink>
+        </nav>
+      </aside>
     </div>
   );
 }
