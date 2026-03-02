@@ -49,7 +49,6 @@ function buildAdditionalInfo(order) {
     picture_url: item.productImage ? `${process.env.BASE_URL || ""}${item.productImage}` : undefined,
     category_id: "fashion",
     quantity: Number(item.quantity) || 1,
-    currency_id: "ARS",
     unit_price: formatCentsToNumber(item.productPrice || 0),
   }));
 
