@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   deleteSavedPaymentMethod,
+  fetchPaymentStatus,
   initPayment,
   processPayment,
 } from "../api";
@@ -249,6 +250,53 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
     selectedMethodId,
     onClear,
   ]);
+
+  useEffect(() => {
+    if (step !== "payment" || !paymentSession?.orderId || !paymentResult?.paymentStatus) return;
+
+    const currentStatus = String(paymentResult.paymentStatus);
+    if (!["in_process", "pending", "authorized"].includes(currentStatus)) return;
+
+    let cancelled = false;
+    let timerId;
+    let attempts = 0;
+    const maxAttempts = 24; // ~2 minutes
+
+    const poll = async () => {
+      if (cancelled) return;
+      attempts += 1;
+      try {
+        const latest = await fetchPaymentStatus(paymentSession.orderId, customerToken);
+        if (cancelled || !latest) return;
+
+        setPaymentResult((prev) => ({ ...(prev || {}), ...latest }));
+
+        if (latest.paymentStatus === "approved") {
+          onClear?.();
+          setStatus("Pago aprobado. Pedido confirmado.");
+          return;
+        }
+
+        if (["rejected", "cancelled"].includes(String(latest.paymentStatus || ""))) {
+          setStatus("Pago rechazado. Puedes intentar con otra tarjeta.");
+          return;
+        }
+      } catch (_) {
+        // Continue polling silently for transient/network issues.
+      }
+
+      if (attempts < maxAttempts && !cancelled) {
+        timerId = setTimeout(poll, 5000);
+      }
+    };
+
+    timerId = setTimeout(poll, 5000);
+
+    return () => {
+      cancelled = true;
+      if (timerId) clearTimeout(timerId);
+    };
+  }, [step, paymentSession?.orderId, paymentResult?.paymentStatus, customerToken, onClear]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -579,9 +627,14 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
             {!brickReady && <p className="helper">Cargando formulario de tarjeta...</p>}
 
             {paymentResult && (
-              <p className="helper">
-                Estado del pago: <strong>{paymentResult.paymentStatus}</strong>
-              </p>
+              <>
+                <p className="helper">
+                  Estado del pago: <strong>{paymentResult.paymentStatus}</strong>
+                </p>
+                {paymentResult.statusDetail && (
+                  <p className="helper">Detalle: {paymentResult.statusDetail}</p>
+                )}
+              </>
             )}
 
             <button className="button secondary" type="button" onClick={() => setStep("checkout")}>

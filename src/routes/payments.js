@@ -192,4 +192,43 @@ router.post("/process", optionalCustomer, async (req, res) => {
   }
 });
 
+router.get("/status/:orderId", optionalCustomer, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    if (!orderId) {
+      return res.status(400).json({ error: "Missing order id" });
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        customerId: true,
+        status: true,
+        paymentId: true,
+        paymentStatus: true,
+        statusDetail: true,
+      },
+    });
+
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    if (req.customer?.id && order.customerId && order.customerId !== req.customer.id) {
+      return res.status(403).json({ error: "Forbidden" });
+    }
+
+    return res.json({
+      orderId: order.id,
+      orderStatus: order.status,
+      paymentId: order.paymentId,
+      paymentStatus: order.paymentStatus,
+      statusDetail: order.statusDetail,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: error.message || "No se pudo consultar el estado del pago" });
+  }
+});
+
 module.exports = router;

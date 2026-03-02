@@ -21,7 +21,7 @@ async function getPaymentById(id) {
 
 function normalizePaymentStatus(status) {
   if (status === "approved") return "paid";
-  if (status === "pending" || status === "in_process") return "pending";
+  if (status === "pending" || status === "in_process" || status === "authorized") return "pending";
   return "rejected";
 }
 

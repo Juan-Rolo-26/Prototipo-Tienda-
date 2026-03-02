@@ -253,3 +253,13 @@ export async function processPayment(payload, token) {
   }
   return res.json();
 }
+
+export async function fetchPaymentStatus(orderId, token) {
+  const headers = {};
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(`${API_URL}/api/payments/status/${orderId}`, { headers });
+  if (!res.ok) {
+    return readError(res, "No se pudo consultar el estado del pago");
+  }
+  return res.json();
+}
