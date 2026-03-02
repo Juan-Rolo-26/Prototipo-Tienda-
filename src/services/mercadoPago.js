@@ -1,8 +1,14 @@
 const crypto = require("crypto");
+const path = require("path");
+const dotenv = require("dotenv");
 const { MercadoPagoConfig, Payment } = require("mercadopago");
 
 function getClient() {
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  let accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  if (!accessToken) {
+    dotenv.config({ path: path.join(__dirname, "../../.env") });
+    accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  }
   if (!accessToken) {
     throw new Error("MERCADOPAGO_ACCESS_TOKEN not configured");
   }
