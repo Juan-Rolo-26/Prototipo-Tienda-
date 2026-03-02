@@ -3,17 +3,20 @@ const path = require("path");
 const dotenv = require("dotenv");
 const { MercadoPagoConfig, Payment } = require("mercadopago");
 
-function getClient() {
+function getAccessToken() {
   let accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!accessToken) {
     dotenv.config({ path: path.join(__dirname, "../../.env") });
     accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   }
-  const normalizedToken = String(accessToken || "")
+  return String(accessToken || "")
     .trim()
     .replace(/^"(.*)"$/, "$1")
     .replace(/^'(.*)'$/, "$1");
+}
 
+function getClient() {
+  const normalizedToken = getAccessToken();
   if (!normalizedToken) {
     throw new Error("MERCADOPAGO_ACCESS_TOKEN not configured");
   }
@@ -22,7 +25,18 @@ function getClient() {
 
 async function createPayment(payload, requestOptions) {
   const payment = new Payment(getClient());
-  return payment.create({ body: payload, requestOptions });
+  const accessToken = getAccessToken();
+  const mergedRequestOptions = requestOptions
+    ? {
+        ...requestOptions,
+        headers: {
+          ...(requestOptions.headers || {}),
+          Authorization:
+            requestOptions.headers?.Authorization || `Bearer ${accessToken}`,
+        },
+      }
+    : undefined;
+  return payment.create({ body: payload, requestOptions: mergedRequestOptions });
 }
 
 async function getPaymentById(id) {
