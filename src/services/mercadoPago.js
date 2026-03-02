@@ -9,10 +9,15 @@ function getClient() {
     dotenv.config({ path: path.join(__dirname, "../../.env") });
     accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   }
-  if (!accessToken) {
+  const normalizedToken = String(accessToken || "")
+    .trim()
+    .replace(/^"(.*)"$/, "$1")
+    .replace(/^'(.*)'$/, "$1");
+
+  if (!normalizedToken) {
     throw new Error("MERCADOPAGO_ACCESS_TOKEN not configured");
   }
-  return new MercadoPagoConfig({ accessToken });
+  return new MercadoPagoConfig({ accessToken: normalizedToken });
 }
 
 async function createPayment(payload, requestOptions) {

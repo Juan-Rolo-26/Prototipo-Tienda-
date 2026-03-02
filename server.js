@@ -35,6 +35,10 @@ app.get("/api/health", (req, res) => {
 
 app.get("/api/runtime-check", (req, res) => {
   const databaseUrl = String(process.env.DATABASE_URL || "");
+  const mpToken = String(process.env.MERCADOPAGO_ACCESS_TOKEN || "")
+    .trim()
+    .replace(/^"(.*)"$/, "$1")
+    .replace(/^'(.*)'$/, "$1");
   let databaseHost = null;
 
   if (databaseUrl) {
@@ -50,6 +54,9 @@ app.get("/api/runtime-check", (req, res) => {
     diag_key_present: Boolean(process.env.DIAG_KEY),
     database_url_present: Boolean(databaseUrl),
     database_host: databaseHost,
+    mercadopago_access_token_present: Boolean(mpToken),
+    mercadopago_access_token_prefix: mpToken ? mpToken.slice(0, 8) : null,
+    mercadopago_access_token_length: mpToken ? mpToken.length : 0,
     prisma_client_engine_type: process.env.PRISMA_CLIENT_ENGINE_TYPE || null,
     node_env: process.env.NODE_ENV || null,
     timestamp: new Date().toISOString(),
