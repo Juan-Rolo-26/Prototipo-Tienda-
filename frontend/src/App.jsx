@@ -278,14 +278,9 @@ function App() {
                       <span>Total</span>
                       <strong>{new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(previewTotal)}</strong>
                     </div>
-                    <div className="lot-preview-buttons">
-                      <Link className="button lot-preview-go" to="/checkout">
-                        Ver mi paquete
-                      </Link>
-                      <Link className="button lot-preview-go" to="/checkout" state={{ initialStep: "checkout" }}>
-                        Continuar compra
-                      </Link>
-                    </div>
+                    <Link className="button lot-preview-go" to="/checkout">
+                      Ver mi paquete
+                    </Link>
                   </>
                 )}
               </div>

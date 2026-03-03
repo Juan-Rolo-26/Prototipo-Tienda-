@@ -1992,14 +1992,9 @@ body {
   font-size: 22px;
 }
 
-.lot-preview-buttons {
-  display: flex;
-  gap: 8px;
-  margin-top: 2px;
-}
-
 .lot-preview-go {
-  flex: 1;
+  width: 100%;
+  margin-top: 2px;
   text-align: center;
 }
 
