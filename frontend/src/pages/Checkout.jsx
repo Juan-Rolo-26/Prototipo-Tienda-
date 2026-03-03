@@ -380,22 +380,15 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
   };
 
   const getCheckoutCustomerData = () => {
-    if (hasSavedLocation && !editingShipping) {
-      return {
-        customerName: [customerProfile.firstName, customerProfile.lastName]
-          .filter(Boolean)
-          .join(" "),
-        province: customerProfile.province,
-        city: customerProfile.city,
-        address1: customerProfile.address1,
-        address2: customerProfile.address2 || "",
-        postalCode: customerProfile.postalCode,
-        phone: customerProfile.phone,
-        deliveryMethod: form.deliveryMethod,
-      };
-    }
-
-    return { ...form };
+    return {
+      ...form,
+      deliveryMethod: "PICKUP",
+      province: form.province || customerProfile?.province || "CABA",
+      city: form.city || customerProfile?.city || "CABA",
+      address1: form.address1 || customerProfile?.address1 || "Retiro por local",
+      address2: form.address2 || customerProfile?.address2 || "",
+      postalCode: form.postalCode || customerProfile?.postalCode || "1000",
+    };
   };
 
   const handleInitPayment = async (event) => {
@@ -410,7 +403,7 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
       setStatus("Ingresa un telefono valido de Argentina (10 a 13 digitos).");
       return;
     }
-    const saveCustomerData = Boolean(customerToken && editingShipping && setAsNewLocation);
+    const saveCustomerData = false;
 
     setLoading(true);
     setStatus(null);
@@ -528,107 +521,23 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
             </button>
           ) : (
             <form className="checkout-form" onSubmit={handleInitPayment}>
-              {hasSavedLocation && !editingShipping ? (
-                <div className="profile-banner checkout-location-preview">
-                  <span>Ubicacion actual: {buildAddressText(customerProfile)}</span>
-                  <button
-                    className="button secondary"
-                    type="button"
-                    onClick={() => {
-                      setEditingShipping(true);
-                      setSetAsNewLocation(false);
-                    }}
-                  >
-                    Cambiar ubicacion
-                  </button>
-                </div>
-              ) : (
-                <>
-                  <input
-                    name="customerName"
-                    placeholder="Nombre y apellido"
-                    value={form.customerName}
-                    onChange={handleChange}
-                    required
-                  />
-                  <select name="province" value={form.province} onChange={handleChange} required>
-                    <option value="">Selecciona una provincia</option>
-                    {provinces.map((province) => (
-                      <option key={province} value={province}>
-                        {province}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    name="city"
-                    value={form.city}
-                    onChange={handleChange}
-                    required
-                    disabled={!form.province}
-                    onFocus={() => {
-                      if (!form.province) setStatus("Primero tienes que seleccionar una provincia.");
-                    }}
-                  >
-                    <option value="">
-                      {form.province ? "Selecciona una ciudad" : "Primero selecciona una provincia"}
-                    </option>
-                    {cities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    name="address1"
-                    placeholder="Direccion (linea 1) · Ej: Barrio - country"
-                    value={form.address1}
-                    onChange={handleChange}
-                    required
-                  />
-                  <input
-                    name="address2"
-                    placeholder="Direccion (linea 2) · Ej: Piso - mzna - lote"
-                    value={form.address2}
-                    onChange={handleChange}
-                  />
-                  <input
-                    name="postalCode"
-                    placeholder="Codigo postal"
-                    value={form.postalCode}
-                    onChange={handleChange}
-                    required
-                  />
-                  <input
-                    name="phone"
-                    placeholder="Telefono"
-                    value={form.phone}
-                    onChange={handleChange}
-                    inputMode="numeric"
-                    required
-                  />
-                  {customerToken && (
-                    <button
-                      className={`button secondary ${setAsNewLocation ? "active" : ""}`}
-                      type="button"
-                      onClick={() => setSetAsNewLocation((prev) => !prev)}
-                    >
-                      {setAsNewLocation
-                        ? "Nueva ubicacion establecida para futuras compras"
-                        : "Establecer como nueva ubicacion"}
-                    </button>
-                  )}
-                </>
-              )}
-
-              <select
-                name="deliveryMethod"
-                value={form.deliveryMethod}
-                onChange={handleChange}
-              >
-                <option value="PICKUP">Retiro por local</option>
-                <option value="HOME_DELIVERY">Envio a domicilio</option>
-                <option value="BRANCH_DELIVERY">Envio a sucursal Correo Argentino</option>
-              </select>
+              <>
+                <input
+                  name="customerName"
+                  placeholder="Nombre y apellido"
+                  value={form.customerName}
+                  onChange={handleChange}
+                  required
+                />
+                <input
+                  name="phone"
+                  placeholder="Telefono"
+                  value={form.phone}
+                  onChange={handleChange}
+                  inputMode="numeric"
+                  required
+                />
+              </>
 
               <button className="button" type="submit" disabled={loading}>
                 {loading ? "Preparando pago..." : "Finalizar compra"}
