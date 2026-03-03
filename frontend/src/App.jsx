@@ -278,9 +278,14 @@ function App() {
                       <span>Total</span>
                       <strong>{new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(previewTotal)}</strong>
                     </div>
-                    <Link className="button lot-preview-go" to="/checkout">
-                      Ver mi paquete
-                    </Link>
+                    <div className="lot-preview-actions">
+                      <Link className="button lot-preview-go" to="/checkout">
+                        Ver mi paquete
+                      </Link>
+                      <Link className="button lot-preview-go secondary" to="/checkout?step=checkout">
+                        Continuar compra
+                      </Link>
+                    </div>
                   </>
                 )}
               </div>

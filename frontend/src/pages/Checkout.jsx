@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   deleteSavedPaymentMethod,
   fetchPaymentStatus,
@@ -38,6 +39,7 @@ function isValidArgentinaPhone(phone) {
 }
 
 function Checkout({ cart, onClear, customerToken, customerProfile }) {
+  const location = useLocation();
   const [step, setStep] = useState("cart");
   const [form, setForm] = useState({
     customerName: "",
@@ -91,6 +93,13 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
   );
 
   const hasSavedLocation = Boolean(customerToken && hasStoredAddress(customerProfile));
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("step") === "checkout") {
+      setStep("checkout");
+    }
+  }, [location.search]);
 
   useEffect(() => {
     if (!customerProfile) {

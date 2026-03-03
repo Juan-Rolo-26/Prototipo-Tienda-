@@ -1998,6 +1998,17 @@ body {
   text-align: center;
 }
 
+.lot-preview-actions {
+  margin-top: 2px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.lot-preview-actions .lot-preview-go {
+  margin-top: 0;
+}
+
 @media (max-width: 920px) {
   .lot-preview {
     display: none;
