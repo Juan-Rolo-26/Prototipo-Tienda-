@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import {
   deleteSavedPaymentMethod,
   fetchPaymentStatus,
@@ -38,7 +39,8 @@ function isValidArgentinaPhone(phone) {
 }
 
 function Checkout({ cart, onClear, customerToken, customerProfile }) {
-  const [step, setStep] = useState("cart");
+  const location = useLocation();
+  const [step, setStep] = useState(location?.state?.initialStep || "cart");
   const [form, setForm] = useState({
     customerName: "",
     province: "",
@@ -61,8 +63,6 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
   const [paymentResult, setPaymentResult] = useState(null);
   const [brickReady, setBrickReady] = useState(false);
   const [deviceSessionId, setDeviceSessionId] = useState(null);
-  const [provinces, setProvinces] = useState([]);
-  const [cities, setCities] = useState([]);
 
   const warningTimers = useRef({});
   const brickControllerRef = useRef(null);
@@ -551,53 +551,6 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
                     onChange={handleChange}
                     required
                   />
-                  <select name="province" value={form.province} onChange={handleChange} required>
-                    <option value="">Selecciona una provincia</option>
-                    {provinces.map((province) => (
-                      <option key={province} value={province}>
-                        {province}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    name="city"
-                    value={form.city}
-                    onChange={handleChange}
-                    required
-                    disabled={!form.province}
-                    onFocus={() => {
-                      if (!form.province) setStatus("Primero tienes que seleccionar una provincia.");
-                    }}
-                  >
-                    <option value="">
-                      {form.province ? "Selecciona una ciudad" : "Primero selecciona una provincia"}
-                    </option>
-                    {cities.map((city) => (
-                      <option key={city} value={city}>
-                        {city}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    name="address1"
-                    placeholder="Direccion (linea 1) · Ej: Barrio - country"
-                    value={form.address1}
-                    onChange={handleChange}
-                    required
-                  />
-                  <input
-                    name="address2"
-                    placeholder="Direccion (linea 2) · Ej: Piso - mzna - lote"
-                    value={form.address2}
-                    onChange={handleChange}
-                  />
-                  <input
-                    name="postalCode"
-                    placeholder="Codigo postal"
-                    value={form.postalCode}
-                    onChange={handleChange}
-                    required
-                  />
                   <input
                     name="phone"
                     placeholder="Telefono"
@@ -619,16 +572,6 @@ function Checkout({ cart, onClear, customerToken, customerProfile }) {
                   )}
                 </>
               )}
-
-              <select
-                name="deliveryMethod"
-                value={form.deliveryMethod}
-                onChange={handleChange}
-              >
-                <option value="PICKUP">Retiro por local</option>
-                <option value="HOME_DELIVERY">Envio a domicilio</option>
-                <option value="BRANCH_DELIVERY">Envio a sucursal Correo Argentino</option>
-              </select>
 
               <button className="button" type="submit" disabled={loading}>
                 {loading ? "Preparando pago..." : "Finalizar compra"}
