@@ -2362,3 +2362,162 @@ html {
   background: var(--bg-accent);
   color: var(--primary-dark);
 }
+
+/* =============================================
+   ADMIN PANEL — Layout desktop: 2 columnas con
+   grid-template-areas (izq: campos, der: media)
+   ============================================= */
+
+.admin-panel-wrap {
+  width: 100%;
+}
+
+.admin-form-grid {
+  grid-template-columns: 1.4fr 0.8fr;
+  grid-template-areas:
+    "fields media"
+    "actions media";
+  row-gap: 12px;
+  column-gap: 24px;
+}
+
+.admin-fields {
+  grid-area: fields;
+  display: grid;
+  gap: 12px;
+}
+
+.admin-media {
+  grid-area: media;
+  align-self: start;
+}
+
+.admin-actions {
+  grid-area: actions;
+  display: grid;
+  gap: 12px;
+}
+
+/* El botón "+" de la grilla está oculto en desktop */
+.admin-upload-plus {
+  display: none;
+}
+
+/* Lightbox — funciona en desktop y mobile */
+.admin-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.88);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-lightbox-content {
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.admin-lightbox-content img,
+.admin-lightbox-content video {
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+.admin-lightbox-close {
+  position: absolute;
+  top: -44px;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.admin-lightbox-close:hover {
+  background: rgba(255, 255, 255, 0.32);
+}
+
+/* =============================================
+   ADMIN PANEL — Mobile ≤600px
+   Solo afecta al admin, NO toca desktop.
+   ============================================= */
+
+@media (max-width: 600px) {
+  /* Una sola columna: campos → media → acciones */
+  .admin-form-grid {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "fields"
+      "media"
+      "actions";
+    row-gap: 12px;
+  }
+
+  /* Grilla de imágenes: 3 por fila en mobile */
+  .image-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  /* Miniaturas más altas para verse bien en 3 columnas */
+  .image-thumb {
+    height: 100px;
+  }
+
+  /* Botón "×" siempre visible en mobile (no hay hover) */
+  .image-thumb .image-delete {
+    opacity: 1;
+  }
+
+  /* Botón de subida estilizado como campo de formulario */
+  .admin-media .image-upload-card {
+    padding: 10px 12px;
+    border-radius: 10px;
+    font-weight: 400;
+    color: var(--muted);
+    text-align: left;
+    font-size: 15px;
+    transform: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Cuando ya hay imágenes: ocultar el botón standalone */
+  .has-media .image-upload-card {
+    display: none;
+  }
+
+  /* Botón "+" dentro de la grilla (solo mobile, solo cuando hay imágenes) */
+  .admin-upload-plus {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100px;
+    border-radius: 12px;
+    border: 2px dashed var(--border);
+    background: #fff;
+    font-size: 32px;
+    color: var(--muted);
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .admin-upload-plus:active {
+    background: var(--bg-accent);
+  }
+}

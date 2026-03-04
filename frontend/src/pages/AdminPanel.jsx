@@ -31,8 +31,10 @@ function AdminPanel({ token, onLogout }) {
   const [currentProduct, setCurrentProduct] = useState(null);
   const [isDirty, setIsDirty] = useState(false);
   const [toast, setToast] = useState(null);
+  const [lightboxItem, setLightboxItem] = useState(null);
   const fileRef = useRef(null);
   const gridRef = useRef(null);
+  const draggedRef = useRef(false);
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -229,6 +231,7 @@ function AdminPanel({ token, onLogout }) {
   const handlePointerDown = (event, index) => {
     if (event.target.closest(".image-delete")) return;
     event.preventDefault();
+    draggedRef.current = false;
     const rect = event.currentTarget.getBoundingClientRect();
     setIsDragging(true);
     setDragIndex(index);
@@ -252,18 +255,23 @@ function AdminPanel({ token, onLogout }) {
 
   const handlePointerMove = (event) => {
     if (!isDragging || dragIndex === null) return;
+    draggedRef.current = true;
     setDragPos((prev) => (prev ? { ...prev, x: event.clientX, y: event.clientY } : prev));
 
     if (!gridRef.current) return;
     const rect = gridRef.current.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
-    if (x < 0 || y < 0 || x > rect.width || y > rect.height + CELL_HEIGHT) return;
 
-    const colWidth = (rect.width - GRID_GAP) / GRID_COLS;
-    const col = x < colWidth ? 0 : 1;
-    const row = Math.max(0, Math.floor(y / (CELL_HEIGHT + GRID_GAP)));
-    const targetIndex = Math.min(media.length - 1, row * GRID_COLS + col);
+    const cols = window.innerWidth <= 600 ? 3 : GRID_COLS;
+    const cellH = window.innerWidth <= 600 ? 100 : CELL_HEIGHT;
+
+    if (x < 0 || y < 0 || x > rect.width || y > rect.height + cellH) return;
+
+    const colWidth = (rect.width - GRID_GAP) / cols;
+    const col = Math.min(Math.max(0, Math.floor(x / colWidth)), cols - 1);
+    const row = Math.max(0, Math.floor(y / (cellH + GRID_GAP)));
+    const targetIndex = Math.min(media.length - 1, row * cols + col);
 
     if (targetIndex !== dragIndex && targetIndex >= 0) {
       const moving = media[dragIndex];
@@ -288,93 +296,136 @@ function AdminPanel({ token, onLogout }) {
     };
   };
 
+  const handleThumbClick = (event, item) => {
+    if (event.target.closest(".image-delete")) return;
+    if (draggedRef.current) return;
+    setLightboxItem(item);
+  };
+
   return (
-    <div className="grid" style={{ gridTemplateColumns: "1.4fr 0.8fr" }}>
-      <form className="form" onSubmit={currentProduct ? (e) => e.preventDefault() : handleCreate}>
-        <h2>Completa los datos del producto</h2>
-        <input name="name" placeholder="Nombre" value={form.name} onChange={handleChange} required />
-        <input name="price" placeholder="Precio (ej: 14500)" value={form.price} onChange={handleChange} required />
-        <input name="width" placeholder="Ancho (cm)" value={form.width} onChange={handleChange} required />
-        <input name="height" placeholder="Alto (cm)" value={form.height} onChange={handleChange} required />
-        <input name="weight" placeholder="Peso (gr)" value={form.weight} onChange={handleChange} required />
-        <input name="stock" placeholder="Stock (default 1)" value={form.stock} onChange={handleChange} />
-        <textarea
-          name="description"
-          placeholder="Descripcion (opcional)"
-          value={form.description}
-          onChange={handleChange}
-        />
-        {!currentProduct && (
-          <button className="button" type="submit" disabled={loading}>
-            {loading ? "Guardando..." : "Guardar producto"}
+    <div className="admin-panel-wrap">
+      <form className="form admin-form-grid" onSubmit={currentProduct ? (e) => e.preventDefault() : handleCreate}>
+        {/* Columna izquierda (desktop) / Sección superior (mobile): campos del formulario */}
+        <div className="admin-fields">
+          <h2>Completa los datos del producto</h2>
+          <input name="name" placeholder="Nombre" value={form.name} onChange={handleChange} required />
+          <input name="price" placeholder="Precio (ej: 14500)" value={form.price} onChange={handleChange} required />
+          <input name="width" placeholder="Ancho (cm)" value={form.width} onChange={handleChange} required />
+          <input name="height" placeholder="Alto (cm)" value={form.height} onChange={handleChange} required />
+          <input name="weight" placeholder="Peso (gr)" value={form.weight} onChange={handleChange} required />
+          <input name="stock" placeholder="Stock (default 1)" value={form.stock} onChange={handleChange} />
+          <textarea
+            name="description"
+            placeholder="Descripcion (opcional)"
+            value={form.description}
+            onChange={handleChange}
+          />
+        </div>
+
+        {/* Columna derecha (desktop) / Sección media (mobile): imágenes y videos */}
+        <div className={`image-box admin-media${media.length > 0 ? " has-media" : ""}`}>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*,video/*"
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              addFiles(files);
+              e.target.value = "";
+            }}
+            style={{ display: "none" }}
+          />
+          <button className="image-upload-card" type="button" onClick={() => fileRef.current?.click()}>
+            {media.length === 0 ? "Agregar imagen o video" : "Agregar mas fotos o videos"}
           </button>
-        )}
-        {currentProduct && (
-          <div className="button-row">
-            <button className="button" type="button" onClick={handleUpdate} disabled={!isDirty || loading}>
-              {loading ? "Actualizando..." : "Actualizar producto"}
-            </button>
-            <button className="button secondary" type="button" onClick={() => navigate(`/producto/${currentProduct.id}`)}>
-              Ver producto
-            </button>
-          </div>
-        )}
-        {status && <p className="helper">{status}</p>}
-      </form>
+          <p className="helper">{media.length} / 10 archivos seleccionados</p>
 
-      <div className="image-box">
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*,video/*"
-          multiple
-          onChange={(e) => {
-            const files = Array.from(e.target.files || []);
-            addFiles(files);
-            e.target.value = "";
-          }}
-          style={{ display: "none" }}
-        />
-        <button className="image-upload-card" type="button" onClick={() => fileRef.current?.click()}>
-          {media.length === 0 ? "Agregar imagen o video" : "Agregar mas fotos o videos"}
-        </button>
-        <p className="helper">{media.length} / 10 archivos seleccionados</p>
-
-        <div
-          ref={gridRef}
-          className={`image-grid ${isDragging ? "dragging" : ""}`}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerLeave={handlePointerUp}
-        >
-          {media.map((item, index) => (
-            <div
-              key={item.id}
-              data-index={index}
-              className={`image-thumb ${isDragging && dragIndex === index ? "dragging" : ""}`}
-              onPointerDown={(event) => handlePointerDown(event, index)}
-              style={getDragStyle(index)}
-            >
-              {item.type === "video" ? (
-                <video src={item.preview} muted />
-              ) : (
-                <img src={item.preview} alt={`Media ${index + 1}`} />
-              )}
-              <button
-                className="image-delete"
-                type="button"
-                onClick={(event) => {
-                  event.stopPropagation();
-                  removeMedia(item.id);
-                }}
-                aria-label="Eliminar"
+          <div
+            ref={gridRef}
+            className={`image-grid ${isDragging ? "dragging" : ""}`}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerLeave={handlePointerUp}
+          >
+            {media.map((item, index) => (
+              <div
+                key={item.id}
+                data-index={index}
+                className={`image-thumb ${isDragging && dragIndex === index ? "dragging" : ""}`}
+                onPointerDown={(event) => handlePointerDown(event, index)}
+                onClick={(event) => handleThumbClick(event, item)}
+                style={getDragStyle(index)}
               >
-                ×
+                {item.type === "video" ? (
+                  <video src={item.preview} muted />
+                ) : (
+                  <img src={item.preview} alt={`Media ${index + 1}`} />
+                )}
+                <button
+                  className="image-delete"
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    removeMedia(item.id);
+                  }}
+                  aria-label="Eliminar"
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {/* Botón "+" dentro de la grilla: visible solo en mobile cuando hay imágenes */}
+            {media.length > 0 && media.length < 10 && (
+              <button
+                className="admin-upload-plus"
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                aria-label="Agregar más archivos"
+              >
+                +
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Parte inferior izquierda (desktop) / Sección inferior (mobile): botones de acción */}
+        <div className="admin-actions">
+          {!currentProduct && (
+            <button className="button" type="submit" disabled={loading}>
+              {loading ? "Guardando..." : "Guardar producto"}
+            </button>
+          )}
+          {currentProduct && (
+            <div className="button-row">
+              <button className="button" type="button" onClick={handleUpdate} disabled={!isDirty || loading}>
+                {loading ? "Actualizando..." : "Actualizar producto"}
+              </button>
+              <button className="button secondary" type="button" onClick={() => navigate(`/producto/${currentProduct.id}`)}>
+                Ver producto
               </button>
             </div>
-          ))}
+          )}
+          {status && <p className="helper">{status}</p>}
         </div>
-      </div>
+      </form>
+
+      {/* Lightbox: preview en grande al tocar una imagen/video */}
+      {lightboxItem && (
+        <div className="admin-lightbox-backdrop" onClick={() => setLightboxItem(null)}>
+          <div className="admin-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <button className="admin-lightbox-close" type="button" onClick={() => setLightboxItem(null)}>
+              ×
+            </button>
+            {lightboxItem.type === "video" ? (
+              <video src={lightboxItem.preview} controls autoPlay />
+            ) : (
+              <img src={lightboxItem.preview} alt="Vista previa" />
+            )}
+          </div>
+        </div>
+      )}
+
       {toast && <div className="toast">{toast}</div>}
     </div>
   );
