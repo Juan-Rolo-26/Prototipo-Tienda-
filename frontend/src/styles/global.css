@@ -2884,3 +2884,93 @@ h3,
     letter-spacing: 2.1px;
   }
 }
+
+/* ===== CONSTANZA Header Layout Refinement ===== */
+.hero {
+  display: none !important;
+}
+
+.ml-header {
+  display: flex !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+  column-gap: 14px !important;
+  row-gap: 10px !important;
+  padding: 10px 18px 12px !important;
+}
+
+.ml-top {
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+}
+
+.ml-brand-block {
+  flex: 0 0 auto !important;
+}
+
+.ml-search-wrap {
+  flex: 1 1 auto !important;
+  min-width: 280px !important;
+  max-width: none !important;
+}
+
+.ml-nav-row {
+  flex: 0 0 auto !important;
+  margin-left: auto !important;
+  justify-content: flex-end !important;
+  gap: 20px !important;
+  flex-wrap: nowrap !important;
+}
+
+.mabel-actions-row {
+  width: auto !important;
+  margin-left: auto !important;
+  margin-top: -2px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+@media (max-width: 1180px) {
+  .ml-header {
+    padding: 10px 14px 12px !important;
+  }
+
+  .ml-top {
+    flex: 1 1 100% !important;
+    order: 1;
+  }
+
+  .ml-nav-row {
+    order: 2;
+    margin-left: 0 !important;
+    width: 100% !important;
+    justify-content: flex-end !important;
+    flex-wrap: wrap !important;
+  }
+
+  .mabel-actions-row {
+    order: 3;
+    width: 100% !important;
+    margin-left: 0 !important;
+    justify-content: flex-end !important;
+  }
+}
+
+@media (max-width: 860px) {
+  .ml-search-wrap {
+    min-width: 0 !important;
+  }
+
+  .ml-nav-row {
+    justify-content: space-between !important;
+  }
+
+  .mabel-actions-row {
+    justify-content: flex-start !important;
+  }
+}
