@@ -2987,12 +2987,7 @@ h3,
 @media (max-width: 860px) {
   .ml-search-wrap {
     min-width: 0 !important;
-    flex: 1 1 0 !important;
-    min-height: 56px !important;
-  }
-
-  .ml-search-input {
-    font-size: clamp(17px, 4.2vw, 21px) !important;
+    flex: 1 1 auto !important;
   }
 
   .ml-nav-row {
@@ -3004,7 +2999,12 @@ h3,
   }
 
   .ml-top {
-    gap: 8px !important;
+    gap: 6px !important;
+  }
+
+  .ml-brand-block {
+    flex: 0 0 auto !important;
+    max-width: 112px !important;
   }
 
   .constanza-logo-name {
@@ -3019,15 +3019,11 @@ h3,
 
 @media (max-width: 600px) {
   .ml-top {
-    gap: 6px !important;
+    gap: 4px !important;
   }
 
-  .ml-search-wrap {
-    min-height: 58px !important;
-  }
-
-  .ml-search-input {
-    font-size: clamp(18px, 5.3vw, 22px) !important;
+  .ml-brand-block {
+    max-width: 84px !important;
   }
 
   .constanza-logo-name {
