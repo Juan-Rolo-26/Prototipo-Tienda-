@@ -9,7 +9,7 @@
   height: clamp(230px, 34vw, 360px);
   border-radius: 0;
   overflow: hidden;
-  background: #d3c8b1;
+  background: linear-gradient(115deg, #f7f7f4 0%, #ececd9 100%);
   z-index: 1;
 }
 
@@ -22,10 +22,10 @@
   height: clamp(64px, 11vw, 118px);
   background: linear-gradient(
     to bottom,
-    rgba(242, 242, 242, 0) 0%,
-    rgba(242, 242, 242, 0.08) 42%,
-    rgba(242, 242, 242, 0.34) 70%,
-    rgba(242, 242, 242, 0.82) 100%
+    rgba(247, 247, 244, 0) 0%,
+    rgba(247, 247, 244, 0.08) 42%,
+    rgba(247, 247, 244, 0.34) 70%,
+    rgba(247, 247, 244, 0.82) 100%
   );
   pointer-events: none;
   z-index: 2;
@@ -66,8 +66,8 @@
   height: 44px;
   border-radius: 999px;
   border: none;
-  background: rgba(255, 255, 255, 0.88);
-  color: #222;
+  background: rgba(247, 247, 244, 0.9);
+  color: #111111;
   font-size: 32px;
   line-height: 1;
   cursor: pointer;
@@ -100,12 +100,12 @@
   height: 10px;
   border-radius: 999px;
   border: none;
-  background: rgba(255, 255, 255, 0.66);
+  background: rgba(111, 116, 42, 0.35);
   cursor: pointer;
 }
 
 .hero-carousel-dot.active {
-  background: #ffffff;
+  background: #6f742a;
 }
 
 @media (max-width: 920px) {

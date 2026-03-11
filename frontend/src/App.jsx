@@ -7,7 +7,6 @@ import AdminPanel from "./pages/AdminPanel";
 import MabelAccess from "./pages/MabelAccess";
 import ProductDetail from "./pages/ProductDetail";
 import PurchasesPage from "./pages/PurchasesPage";
-import logo from "./assets/logo-traviesa-ropa-v2.png";
 import routeLoaderAnimation from "./assets/route-loader.json";
 
 function App() {
@@ -174,7 +173,10 @@ function App() {
                 startRouteLoader();
               }}
             >
-              <img className="ml-logo-img" src={logo} alt="Traviesa" />
+              <div className="constanza-logo-mark">
+                <span className="constanza-logo-name">Constanza</span>
+                <span className="constanza-logo-tag">Boutique Europea</span>
+              </div>
             </Link>
           </div>
 

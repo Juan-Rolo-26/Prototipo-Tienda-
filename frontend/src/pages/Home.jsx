@@ -85,9 +85,9 @@ function Home({ onAdd, searchQuery, cart, isAdmin }) {
       )}
 
       <section className="hero">
-        <span className="badge">Mayorista · Productos unicos</span>
-        <h1>Tu proveedor textil mas barato y confiable</h1>
-        <p>Prendas importadas unicas, ideales para la reventa o el uso personal.</p>
+        <span className="badge">Elegancia europea · Seleccion exclusiva</span>
+        <h1>Prendas seleccionadas con estilo clasico y moderno</h1>
+        <p>Una curaduria sofisticada inspirada en boutiques de Italia, Francia y Espana.</p>
       </section>
 
       {loading && <p>Cargando productos...</p>}

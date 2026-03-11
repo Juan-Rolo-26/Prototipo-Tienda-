@@ -2551,3 +2551,336 @@ html {
     border-right: none;
   }
 }
+
+/* ===== CONSTANZA Brand Override (solo visual) ===== */
+:root {
+  --bg: #f7f7f4;
+  --bg-accent: #ececd9;
+  --text: #111111;
+  --muted: #4a4a4a;
+  --primary: #6f742a;
+  --primary-dark: #595f20;
+  --card: #fdfdfb;
+  --border: #d8dac7;
+  --ink: #111111;
+}
+
+html,
+body {
+  background: radial-gradient(circle at top right, #f0f1e5 0%, #f7f7f4 58%, #f7f7f4 100%) !important;
+  color: #111111 !important;
+}
+
+body {
+  font-family: "Montserrat", sans-serif;
+}
+
+h1,
+h2,
+h3,
+.constanza-logo-name {
+  font-family: "Playfair Display", serif;
+  letter-spacing: 0.2px;
+}
+
+.container {
+  padding: 0 26px 30px;
+}
+
+.ml-header {
+  position: relative !important;
+  display: grid !important;
+  gap: 12px !important;
+  min-height: auto !important;
+  padding: 16px 26px 14px !important;
+  background: #fdfdfb !important;
+  border-bottom: 1px solid #d8dac7 !important;
+  box-shadow: 0 10px 28px rgba(17, 17, 17, 0.06) !important;
+  margin-bottom: 8px !important;
+  overflow: visible !important;
+  animation: none !important;
+}
+
+.ml-header::before,
+.ml-header::after {
+  content: none !important;
+  animation: none !important;
+  background: none !important;
+}
+
+.ml-top {
+  display: grid !important;
+  grid-template-columns: minmax(230px, 320px) minmax(0, 1fr) !important;
+  align-items: end !important;
+  gap: 20px !important;
+  height: auto !important;
+}
+
+.ml-brand-block {
+  width: auto !important;
+  gap: 0 !important;
+}
+
+.ml-logo-link {
+  position: static !important;
+  transform: none !important;
+  width: auto !important;
+  height: auto !important;
+  display: inline-flex !important;
+  align-items: center !important;
+}
+
+.constanza-logo-mark {
+  display: grid;
+  gap: 2px;
+  align-items: center;
+}
+
+.constanza-logo-name {
+  font-size: clamp(36px, 3.3vw, 52px);
+  line-height: 0.95;
+  color: #111111;
+  text-transform: uppercase;
+}
+
+.constanza-logo-tag {
+  font-size: 11px;
+  letter-spacing: 3.4px;
+  text-transform: uppercase;
+  color: #6f742a;
+  font-weight: 600;
+}
+
+.ml-search-wrap {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  margin-top: 0 !important;
+  border-radius: 14px !important;
+  border: 1px solid #d8dac7 !important;
+  background: #ffffff !important;
+  box-shadow: 0 3px 12px rgba(17, 17, 17, 0.05) !important;
+}
+
+.ml-search-input {
+  font-size: clamp(16px, 1.65vw, 23px) !important;
+  color: #111111 !important;
+}
+
+.ml-search-input::placeholder {
+  color: #666666 !important;
+}
+
+.ml-search-button {
+  background: #f7f7f4 !important;
+  color: #6f742a !important;
+  border-left: 1px solid #d8dac7 !important;
+}
+
+.ml-nav-row {
+  position: static !important;
+  padding-left: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 16px !important;
+  flex-wrap: wrap !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+.ml-nav-row .nav-link,
+.ml-icon-link,
+.ml-drawer-link,
+.ml-location-link {
+  color: #111111 !important;
+}
+
+.ml-nav-row .nav-link {
+  font-size: 15px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 1.1px !important;
+  font-weight: 600 !important;
+}
+
+.nav-link.active::after {
+  background: #6f742a !important;
+}
+
+.nav-badge {
+  background: #6f742a !important;
+  color: #f7f7f4 !important;
+}
+
+.mabel-action-btn {
+  border: 1px solid #d8dac7 !important;
+  background: #ffffff !important;
+  color: #111111 !important;
+}
+
+.mabel-action-btn:hover {
+  background: #ececd9 !important;
+  box-shadow: 0 8px 16px rgba(17, 17, 17, 0.1) !important;
+}
+
+.hero {
+  display: grid !important;
+  background: linear-gradient(120deg, #fdfdfb 0%, #f3f4ea 100%) !important;
+  border: 1px solid #d8dac7 !important;
+  border-radius: 18px !important;
+}
+
+.hero h1 {
+  font-family: "Playfair Display", serif !important;
+  color: #111111 !important;
+}
+
+.hero p,
+.helper {
+  color: #4a4a4a !important;
+}
+
+.badge {
+  background: #ececd9 !important;
+  color: #6f742a !important;
+  border: 1px solid #d8dac7 !important;
+}
+
+.form,
+.card,
+.table-row,
+.cart-item,
+.modal,
+.saved-methods,
+.mp-brick-container,
+.image-upload-card,
+.product-main img,
+.product-main video,
+.product-thumbs .thumb,
+.image-thumb,
+.lot-preview,
+.lot-preview-item {
+  background: #fdfdfb !important;
+  border: 1px solid #d8dac7 !important;
+  box-shadow: 0 9px 20px rgba(17, 17, 17, 0.06) !important;
+}
+
+.button {
+  background: #6f742a !important;
+  color: #f7f7f4 !important;
+  border: 1px solid #6f742a !important;
+  border-radius: 11px !important;
+}
+
+.button:hover {
+  background: #595f20 !important;
+  color: #f7f7f4 !important;
+}
+
+.button.secondary {
+  background: #f7f7f4 !important;
+  color: #111111 !important;
+  border: 1px solid #9da35c !important;
+}
+
+.button.secondary:hover,
+.button.secondary.active {
+  background: #ececd9 !important;
+  color: #111111 !important;
+}
+
+.qty-control,
+.lot-preview-qty,
+.form input,
+.form select,
+.form textarea,
+.auth-form input {
+  border: 1px solid #d8dac7 !important;
+  background: #ffffff !important;
+  color: #111111 !important;
+}
+
+.price {
+  color: #6f742a !important;
+}
+
+.lot-preview h4,
+.related h3,
+.modal h2,
+.modal h3,
+.form h2,
+.product-info h2,
+.purchases-empty-title {
+  color: #111111 !important;
+  font-family: "Playfair Display", serif !important;
+}
+
+.lot-preview-remove,
+.cart-remove,
+.card-delete,
+.image-delete {
+  background: rgba(17, 17, 17, 0.72) !important;
+  color: #f7f7f4 !important;
+}
+
+.route-loader-backdrop,
+.modal-backdrop,
+.ml-drawer-backdrop {
+  background: rgba(17, 17, 17, 0.35) !important;
+}
+
+.route-loader {
+  background: rgba(247, 247, 244, 0.94) !important;
+}
+
+.ml-drawer {
+  background: #fdfdfb !important;
+  border-left: 1px solid #d8dac7;
+}
+
+.ml-drawer-link.active {
+  background: #ececd9 !important;
+  color: #6f742a !important;
+}
+
+@media (max-width: 1024px) {
+  .ml-header {
+    padding: 12px 18px !important;
+  }
+
+  .ml-top {
+    grid-template-columns: 1fr !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+
+  .constanza-logo-name {
+    font-size: clamp(30px, 7.5vw, 44px);
+  }
+}
+
+@media (max-width: 860px) {
+  .ml-nav-row {
+    justify-content: space-between;
+    gap: 12px !important;
+    width: 100%;
+  }
+
+  .ml-nav-row .nav-link {
+    font-size: 13px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .container {
+    padding: 0 10px 18px;
+  }
+
+  .constanza-logo-name {
+    letter-spacing: 0;
+  }
+
+  .constanza-logo-tag {
+    letter-spacing: 2.1px;
+  }
+}
