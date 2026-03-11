@@ -3027,7 +3027,7 @@ h3,
     margin-bottom: 0 !important;
     margin-top: 0 !important;
     height: 56px !important;
-    transform: translateY(8px) !important;
+    transform: translateY(18px) !important;
   }
 
   .ml-nav-row .nav-link,
@@ -3042,14 +3042,14 @@ h3,
     right: auto !important;
     bottom: auto !important;
     margin-left: 0 !important;
-    margin-top: 0 !important;
+    margin-top: 4px !important;
     justify-self: end !important;
     align-self: start !important;
     display: flex !important;
     justify-content: flex-end !important;
     gap: 10px !important;
     width: max-content !important;
-    min-height: 44px !important;
-    padding-top: 2px !important;
+    min-height: 46px !important;
+    padding-top: 4px !important;
   }
 }
