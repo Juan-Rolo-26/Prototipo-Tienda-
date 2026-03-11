@@ -2987,8 +2987,9 @@ h3,
 @media (max-width: 860px) {
   .ml-search-wrap {
     min-width: 0 !important;
-    flex: 1 1 0 !important;
-    max-width: calc(100% - 158px) !important;
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    width: auto !important;
   }
 
   .ml-nav-row {
@@ -3024,8 +3025,9 @@ h3,
   }
 
   .ml-search-wrap {
-    flex: 1 1 0 !important;
-    max-width: calc(100% - 142px) !important;
+    flex: 1 1 auto !important;
+    max-width: none !important;
+    width: auto !important;
   }
 
   .ml-brand-block {
