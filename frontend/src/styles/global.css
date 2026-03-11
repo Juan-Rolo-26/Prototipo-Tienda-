@@ -3027,6 +3027,12 @@ h3,
     margin-bottom: 0 !important;
     margin-top: 0 !important;
     height: 56px !important;
+    transform: translateY(8px) !important;
+  }
+
+  .ml-nav-row .nav-link,
+  .ml-nav-row .ml-icon-link {
+    line-height: 1 !important;
   }
 
   .mabel-actions-row {
