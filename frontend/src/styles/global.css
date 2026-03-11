@@ -2987,8 +2987,8 @@ h3,
 @media (max-width: 860px) {
   .ml-search-wrap {
     min-width: 0 !important;
-    flex: 0 1 56% !important;
-    max-width: 56% !important;
+    flex: 1 1 0 !important;
+    max-width: calc(100% - 158px) !important;
   }
 
   .ml-nav-row {
@@ -3004,7 +3004,7 @@ h3,
   }
 
   .ml-brand-block {
-    flex: 0 0 auto !important;
+    flex: 0 0 152px !important;
     max-width: none !important;
   }
 
@@ -3024,11 +3024,12 @@ h3,
   }
 
   .ml-search-wrap {
-    flex-basis: 54% !important;
-    max-width: 54% !important;
+    flex: 1 1 0 !important;
+    max-width: calc(100% - 142px) !important;
   }
 
   .ml-brand-block {
+    flex-basis: 136px !important;
     max-width: none !important;
   }
 
